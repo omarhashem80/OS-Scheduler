@@ -1,17 +1,41 @@
-## headers.h contains clk functions, it should be included anywhere the clock functions are used.
+# Project README
 
-## To get time call:
+This repository contains code related to clock functions.
 
+## Header Inclusion
+
+`headers.h` contains clock functions and should be included anywhere these functions are used in your project.
+
+## Time Retrieval
+
+To retrieve the current time, call:
+
+```c
 getClk();
+```
 
-## You can use Makefile to build and run your project
+## Building and Running
 
-# To compile your project, use the command:
+You can use the provided Makefile to build and run your project.
+
+### Compilation
+
+To compile your project, use the following command:
+
+```bash
 make
+```
 
-# To run your project, use the command:
+### Running
+
+To run your project, use the following command:
+
+```bash
 make run
+```
 
-# If you added a file to your project add it to the build section in the Makefile
+### Adding Files
 
-# Always start the line with a tab in Makefile, it is its syntax
+If you add a new file to your project, remember to include it in the build section of the Makefile.
+
+- Ensure that each line in the Makefile starts with a tab character, as it is the syntax for Makefile.
