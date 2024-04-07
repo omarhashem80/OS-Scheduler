@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdbool.h>
-typedef short bool;
+
 #define true 1
 #define false 0
 
@@ -44,9 +44,12 @@ void initializeQueue(struct Queue *queue) {
 }
 
 // Function to enqueue a process
-bool enqueue(struct Queue *queue, struct Process *p) {
+void enqueue(struct Queue *queue, struct Process *p) {
     struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
-    if (!newNode) return false;
+    if (!newNode) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
 
     newNode->data = p;
     newNode->next = NULL;
@@ -58,7 +61,6 @@ bool enqueue(struct Queue *queue, struct Process *p) {
         queue->rear = newNode;
     }
     queue->size++;
-    return true;
 }
 
 // Function to dequeue a process
@@ -76,12 +78,24 @@ struct Process* dequeue(struct Queue *queue) {
     return p;
 }
 
+struct Process* peek(struct Queue *queue) {
+    if (queue->front == NULL) return NULL;
+    struct Node *temp = queue->front;
+    struct Process *p = temp->data;
+    free(temp);
+    return p;
+}
+
 // Function to check if the queue is empty
-bool isEmpty(struct Queue *queue) {
+int isEmpty(struct Queue *queue) {
     return queue->size == 0;
 }
 
-
+struct msgbuff
+{
+	long mtype;
+	struct Process* process;
+};
 
 ///==============================
 //don't mess with this variable//
