@@ -10,12 +10,77 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-
+#include <stdlib.h>
+#include <stdbool.h>
 typedef short bool;
 #define true 1
 #define false 0
 
 #define SHKEY 300
+
+// Define a structure for the process
+struct Process {
+    int id, arrival, runtime, priority;
+};
+
+// Define a structure for the node in the queue
+struct Node {
+    struct Process *data;
+    struct Node *next;
+};
+
+// Define a structure for the queue
+struct Queue {
+    struct Node *front;
+    struct Node *rear;
+    int size;
+};
+
+// Function to initialize the queue
+void initializeQueue(struct Queue *queue) {
+    queue->front = NULL;
+    queue->rear = NULL;
+    queue->size = 0;
+}
+
+// Function to enqueue a process
+bool enqueue(struct Queue *queue, struct Process *p) {
+    struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
+    if (!newNode) return false;
+
+    newNode->data = p;
+    newNode->next = NULL;
+
+    if (!queue->front) {
+        queue->front = queue->rear = newNode;
+    } else {
+        queue->rear->next = newNode;
+        queue->rear = newNode;
+    }
+    queue->size++;
+    return true;
+}
+
+// Function to dequeue a process
+struct Process* dequeue(struct Queue *queue) {
+    if (queue->front == NULL) return NULL;
+
+    struct Node *temp = queue->front;
+    struct Process *p = temp->data;
+    queue->front = queue->front->next;
+
+    if (queue->front == NULL) queue->rear = NULL;
+
+    free(temp);
+    queue->size--;
+    return p;
+}
+
+// Function to check if the queue is empty
+bool isEmpty(struct Queue *queue) {
+    return queue->size == 0;
+}
+
 
 
 ///==============================

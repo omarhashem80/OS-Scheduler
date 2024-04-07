@@ -4,7 +4,24 @@ void clearResources(int);
 
 int main(int argc, char * argv[])
 {
-    signal(SIGINT, clearResources);
+    struct Queue queue;
+    initializeQueue(&queue);
+
+    // Example usage
+    struct Process p1 = {1, 0, 10, 1};
+    struct Process p2 = {2, 2, 8, 2};
+    struct Process p3 = {3, 4, 6, 3};
+
+    enqueue(&queue, &p1);
+    enqueue(&queue, &p2);
+    enqueue(&queue, &p3);
+
+    while (!isEmpty(&queue)) {
+        struct Process *p = dequeue(&queue);
+        printf("Dequeued Process: ID %d\n", p->id);
+    }
+    
+    // signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
@@ -24,10 +41,11 @@ int main(int argc, char * argv[])
 void clearResources(int signum)
 {
     //TODO Clears all resources in case of interruption
+
 }
 
 void readInputFiles(){
-
+   
 }
 
 void getUserInput(){
