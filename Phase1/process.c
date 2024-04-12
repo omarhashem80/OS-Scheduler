@@ -3,6 +3,18 @@ int remainingTime;
 int startTime;
 int runTime;
 int processNo;
+
+void resume_process(int signum) {
+    // Resume process by updating start time
+    startTime = getClk();
+}
+
+void stop_process(int signum) {
+    // Stop process by updating runTime and raising SIGSTOP signal
+    runTime = remainingTime;
+    raise(SIGSTOP);
+}
+
 int main(int argc, char *argv[]) {
      // Check if the correct number of command-line arguments is provided
     if (argc != 3) {
@@ -14,8 +26,8 @@ int main(int argc, char *argv[]) {
     initClk();
 
     // Register signal handlers
-    signal(SIGCONT, Process_resume);
-    signal(SIGTSTP, Process_stop);
+    signal(SIGCONT, resume_process);
+    signal(SIGTSTP, stop_process);
 
     // Retrieve remaining time and process number from command-line arguments
     runTime = atoi(argv[1]);
@@ -38,13 +50,3 @@ int main(int argc, char *argv[]) {
     exit(processNo);
 }
 
-void Process_resume(int signum) {
-    // Resume process by updating start time
-    startTime = getClk();
-}
-
-void Process_stop(int signum) {
-    // Stop process by updating runTime and raising SIGSTOP signal
-    runTime = remainingTime;
-    raise(SIGSTOP);
-}

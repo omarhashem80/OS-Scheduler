@@ -18,6 +18,7 @@
 
 #define SHKEY 300
 
+//***********************************************************************************//
 // Define a structure for the process
 struct Process {
     int id, arrival, runtime, priority;
@@ -90,6 +91,24 @@ struct Process* peek(struct Queue *queue) {
 int isEmpty(struct Queue *queue) {
     return queue->size == 0;
 }
+
+// Function to destroy the queue and deallocate memory
+void destroyQueue(struct Queue *queue) {
+    // Traverse the queue and deallocate memory for each node
+    struct Node *current = queue->front;
+    while (current != NULL) {
+        struct Node *temp = current;
+        current = current->next;
+        free(temp->data); // Deallocate memory for the process data
+        free(temp);       // Deallocate memory for the node
+    }
+
+    // Reset queue attributes
+    queue->front = NULL;
+    queue->rear = NULL;
+    queue->size = 0;
+}
+//***********************************************************************************//
 
 struct msgbuff
 {

@@ -1,7 +1,18 @@
 #include "headers.h"
 
 int q_id;
-void clearResources(int);
+struct Queue processQueue;
+
+void clearResources(int signum)
+{
+    //TODO Clears all resources in case of interruption
+    msgctl(q_id, IPC_RMID, (struct msqid_ds *)0);
+    kill(0, SIGKILL);
+    destroyClk(true);
+    destroyQueue(&processQueue);
+    exit(0);
+}
+
 // Function to read the input file and populate the queue
 void readInputFile(const char *filename, struct Queue *queue) {
     FILE *file = fopen(filename, "r");
@@ -36,7 +47,7 @@ int main(int argc, char * argv[])
     // signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
-    struct Queue processQueue;
+    
     initializeQueue(&processQueue);
     readInputFile("./TestCases/processes.txt",&processQueue);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
@@ -55,7 +66,7 @@ int main(int argc, char * argv[])
         perror("Fork failed");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        char schedulerARGS[4]; // Changed to array of char pointers
+        char *schedulerARGS[4]; // Changed to array of char pointers
         sprintf(schedulerARGS[0], "scheduler.out");
         sprintf(schedulerARGS[1], "%d", algorithmNO); // Converted int to string
         sprintf(schedulerARGS[2], "%d", timeSlice); 
@@ -100,17 +111,12 @@ int main(int argc, char * argv[])
     }
     // 7. Clear clock resources
     destroyClk(true);
+    // 8. Clear queue resources
+    destroyQueue(&processQueue);
     return 0;
 }
 
-void clearResources(int signum)
-{
-    //TODO Clears all resources in case of interruption
-    msgctl(q_id, IPC_RMID, (struct msqid_ds *)0);
-    kill(0, SIGKILL);
-    destroyClk(true);
-    exit(0);
-}
+
 
 
 
