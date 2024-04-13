@@ -123,7 +123,7 @@ void destroyQueue(struct Queue *queue) {
 struct msgbuff
 {
 	long mtype;
-	struct Process* process;
+	struct Process process;
 };
 
 ///==============================

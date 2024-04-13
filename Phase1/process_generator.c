@@ -97,12 +97,13 @@ int main(int argc, char * argv[])
      if (q_id == -1){
         perror("Error in create up queue");
         exit(-1);
-    }
+    }    
     while(!isEmpty(&processQueue)){
         struct Process *p = peek(&processQueue);
         if(p->arrival== getClk()){
+            printf("PORCESS GENERATOR: new process arrive with id :%d\n",p->id);
             struct msgbuff message;
-            message.process = p;
+            message.process = *p;
             message.mtype = 5;
             int send_val = msgsnd(q_id,  &message, sizeof(message.process), !IPC_NOWAIT);
             if (send_val == -1)
