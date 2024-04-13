@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
         perror("Fork failed");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        printf("child1 to scheduler\n");
+        //printf("child1 to scheduler\n");
         char algorithmArg[16], timeSliceArg[16]; // Assuming algorithmNO and timeSlice won't exceed 15 digits
         sprintf(algorithmArg, "%d", algorithmNO);
         sprintf(timeSliceArg, "%d", timeSlice);
@@ -80,7 +80,7 @@ int main(int argc, char * argv[])
             exit(EXIT_FAILURE);
         }else if (pid==0){
             char * clockARGS [] = {"clk.out", NULL};
-            printf("child2 to clk\n");
+            //printf("child2 to clk\n");
             execv(realpath("clk.out", NULL),clockARGS);
         }
     }
