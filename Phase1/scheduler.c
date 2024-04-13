@@ -9,6 +9,7 @@ int main(int argc, char *argv[]) {
     printf("algo: %s\n", argv[1]); 
     printf("timeSlice: %s\n", argv[2]); 
     initClk();
+
     // int q_key = 22;
     // int quantum;
     // int q_id = msgget(q_key, 0666 | IPC_CREAT);
@@ -84,4 +85,5 @@ int main(int argc, char *argv[]) {
     sleep(5);// remove it
     destroyClk(true);
     return 0;
+
 }
