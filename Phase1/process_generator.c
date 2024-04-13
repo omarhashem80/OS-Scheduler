@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
         perror("Fork failed");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        char schedulerARGS[4]; // Changed to array of char pointers
+        char* schedulerARGS[4]; // Changed to array of char pointers
         sprintf(schedulerARGS[0], "scheduler.out");
         sprintf(schedulerARGS[1], "%d", algorithmNO); // Converted int to string
         sprintf(schedulerARGS[2], "%d", timeSlice); 
