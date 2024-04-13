@@ -47,7 +47,7 @@ int main(int argc, char * argv[])
     // signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
-    
+    //struct Queue processQueue;
     initializeQueue(&processQueue);
     readInputFile("./TestCases/processes.txt",&processQueue);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
@@ -60,16 +60,18 @@ int main(int argc, char * argv[])
         printf("Enter the time quantum for Round Robin: ");
         scanf("%d", &timeSlice);
     }
+    printf("%d\n", algorithmNO);
     // 3. Initiate and create the scheduler and clock processes.
     int pid = fork();
     if (pid == -1) {
         perror("Fork failed");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        char *schedulerARGS[4]; // Changed to array of char pointers
-        sprintf(schedulerARGS[0], "scheduler.out");
-        sprintf(schedulerARGS[1], "%d", algorithmNO); // Converted int to string
-        sprintf(schedulerARGS[2], "%d", timeSlice); 
+        printf("child1 to scheduler\n");
+        char algorithmArg[16], timeSliceArg[16]; // Assuming algorithmNO and timeSlice won't exceed 15 digits
+        sprintf(algorithmArg, "%d", algorithmNO);
+        sprintf(timeSliceArg, "%d", timeSlice);
+        char *schedulerARGS[] = {"scheduler.out", algorithmArg, timeSliceArg, NULL}; 
         execv(realpath("scheduler.out", NULL),schedulerARGS);
     } else{
         pid = fork();
@@ -78,6 +80,7 @@ int main(int argc, char * argv[])
             exit(EXIT_FAILURE);
         }else if (pid==0){
             char * clockARGS [] = {"clk.out", NULL};
+            printf("child2 to clk\n");
             execv(realpath("clk.out", NULL),clockARGS);
         }
     }

@@ -83,7 +83,6 @@ struct Process* peek(struct Queue *queue) {
     if (queue->front == NULL) return NULL;
     struct Node *temp = queue->front;
     struct Process *p = temp->data;
-    free(temp);
     return p;
 }
 
@@ -99,7 +98,12 @@ void destroyQueue(struct Queue *queue) {
     while (current != NULL) {
         struct Node *temp = current;
         current = current->next;
-        free(temp->data); // Deallocate memory for the process data
+        
+        // Check if process data exists before deallocating
+        if (temp->data != NULL) {
+            free(temp->data); // Deallocate memory for the process data
+        }
+        
         free(temp);       // Deallocate memory for the node
     }
 
@@ -108,6 +112,7 @@ void destroyQueue(struct Queue *queue) {
     queue->rear = NULL;
     queue->size = 0;
 }
+
 //***********************************************************************************//
 
 struct msgbuff
