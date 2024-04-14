@@ -8,12 +8,14 @@ void resume_process(int signum) {
     // Resume process by updating start time
     printf("FROM PROCESS FILE :: process with number %d got continue signal\n",processNo);
     startTime = getClk();
+    signal(SIGCONT, resume_process);
 }
 
 void stop_process(int signum) {
     // Stop process by updating runTime and raising SIGSTOP signal
     printf("FROM PROCESS FILE :: process with number %d go stop signal\n",processNo);
     runTime = remainingTime;
+    signal(SIGTSTP, stop_process);
     raise(SIGSTOP);
 }
 
@@ -29,7 +31,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
      printf("FROM PROCESS FILE :: process id:%d\n",getpid());
-
     // Initialize clock
     initClk();
 
@@ -43,14 +44,14 @@ int main(int argc, char *argv[]) {
     printf("FROM PROCESS FILE :: %d\n",processNo);
     // Loop until remaining time becomes zero
     while (remainingTime > 0) {
-        //printf("process with num:%d is running\n",processNo);
         int elapsed = getClk() - startTime;
         remainingTime = runTime - elapsed;
     }
-
+    
     // Cleanup
     destroyClk(false);
     // Notify parent process
+    printf("BEFORE SENDING KILL SINGAL\n");
     kill(getppid(), SIGUSR1); 
     exit(processNo);
 }

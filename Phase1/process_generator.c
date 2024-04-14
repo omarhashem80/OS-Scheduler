@@ -43,7 +43,8 @@ void readInputFile(const char *filename, struct Queue *queue) {
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
-    int algorithmNO,timeSlice = -1;   
+    int algorithmNO,timeSlice = -1;
+    int schdeulerid;   
     // signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
@@ -74,6 +75,7 @@ int main(int argc, char * argv[])
         char *schedulerARGS[] = {"scheduler.out", algorithmArg, timeSliceArg, NULL}; 
         execv(realpath("scheduler.out", NULL),schedulerARGS);
     } else{
+        schdeulerid=pid;
         pid = fork();
         if(pid==-1){
             perror("Fork failed");
@@ -114,6 +116,7 @@ int main(int argc, char * argv[])
         
     }
     // 7. Clear clock resources
+    waitpid(schdeulerid,&x,0);
     destroyClk(true);
     // 8. Clear queue resources
     destroyQueue(&processQueue);
