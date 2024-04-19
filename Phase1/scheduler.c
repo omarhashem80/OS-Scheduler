@@ -31,10 +31,10 @@ void update_PCB(struct Process * p,int finished){
     if(finished){
         sum_WTA_squared+=p->WTA * p->WTA;
         avg_wating_time+=running_process->waiting_time;
-        avg_WTA+=running_process->waiting_time;
+        avg_WTA+=running_process->WTA;
         number_of_processes++;
         total_non_ideal_time+=p->runtime;
-        fprintf(outputFilePointer,"\tTA\t%d\tWTA\t%d\n",running_process->turnaround_time,running_process->WTA);
+        fprintf(outputFilePointer,"\tTA\t%d\tWTA\t%.2f\n",running_process->turnaround_time,running_process->WTA);
     }else
         fprintf(outputFilePointer,"\n");
 }
@@ -189,7 +189,7 @@ void rr_start(int quantum){
 void write_scheduler_perf(){
     FILE *perfFilePointer; 
     perfFilePointer = fopen("./outputs/scheduler.perf", "w");
-    fprintf(perfFilePointer,"total cpu time\t%d\tideal time\t%d\n",total_cpu_time,ideal_time);
+    //fprintf(perfFilePointer,"total cpu time\t%d\tideal time\t%d\n",total_cpu_time,ideal_time);
     fprintf(perfFilePointer,"CPU Utilization\t%.2f\n",(total_cpu_time-ideal_time)*100.0/total_cpu_time);
     //fprintf(perfFilePointer,"CPU Utilization\t%.2f\n",total_non_ideal_time*1.0/total_cpu_time);
     avg_wating_time/=number_of_processes;
