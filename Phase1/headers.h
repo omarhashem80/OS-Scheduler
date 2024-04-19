@@ -22,6 +22,7 @@
 // Define a structure for the process
 struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
+    float WTA;
     char state[20];
     /*
     enum {

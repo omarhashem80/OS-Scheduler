@@ -1,3 +1,4 @@
+#include <math.h>
 #include "headers.h"
 #include <stdio.h>
 #include <signal.h>
@@ -6,20 +7,40 @@
 struct Queue process_queue;
 struct Process * running_process;
 struct Process * terminated_process;
+struct msgbuff message;
+int total_cpu_time;
+int ideal_time=0;
+int total_non_ideal_time=0;
+float avg_WTA=0;
+float sum_WTA_squared=0;
+float avg_wating_time=0;
+float std_WTA=0;
+int number_of_processes=0;
+int q_key = 22;
+int q_id;
+int no_more_processes_to_recieve=0;
 FILE *outputFilePointer; // Declare a file pointer
 void process_terminated(int signum);
+void process_generator_terminated(int signum);
+void rr_start(int quantum);
+void write_scheduler_perf();
 void update_PCB(struct Process * p,int finished){
     //waiting time =current time- arrival time-time taken in cpu uptil now
     p->waiting_time=getClk()-p->arrival-(p->runtime-p->remaining_time);
     fprintf(outputFilePointer, "At time\t%d\tprocess\t%d\t%s\tarrive\t%d\ttotal\t%d\tremain\t%d\twait\t%d",getClk(),p->id,p->state,p->arrival,p->runtime,p->remaining_time,p->waiting_time);
     if(finished){
-        fprintf(outputFilePointer,"\tTA\t%d\tWTA\t%.2f\n",p->turnaround_time,p->turnaround_time*1.0/p->runtime);
+        sum_WTA_squared+=p->WTA * p->WTA;
+        avg_wating_time+=running_process->waiting_time;
+        avg_WTA+=running_process->waiting_time;
+        number_of_processes++;
+        total_non_ideal_time+=p->runtime;
+        fprintf(outputFilePointer,"\tTA\t%d\tWTA\t%d\n",running_process->turnaround_time,running_process->WTA);
     }else
         fprintf(outputFilePointer,"\n");
 }
 int main(int argc, char *argv[]) {
-    initClk();
     signal(SIGUSR1, process_terminated);
+    signal(SIGUSR2, process_generator_terminated);
     printf("FROM SCHDULER FILE :: Hello from scheduler\n");
     printf("FROM SCHDULER FILE :: Scheduler\n");
     printf("FROM SCHDULER FILE :: algo: %s\n", argv[1]); 
@@ -29,23 +50,43 @@ int main(int argc, char *argv[]) {
         printf("Error opening the file.\n");
         return 1; // Exit with an error code
     }
-    int q_key = 22;
-    int quantum;
-    int q_id = msgget(q_key, 0666 | IPC_CREAT);
+    q_id = msgget(q_key, 0666 | IPC_CREAT);
     if (q_id == -1){
         perror("Error in create up queue");
         exit(-1);
     }
     initializeQueue(&process_queue);
-    struct msgbuff message;
+    initClk();
     if(atoi(argv[1])==3){ //round robin
+        rr_start(atoi(argv[2]));
+    }
+    fclose(outputFilePointer);
+    sleep(5);
+    destroyClk(false);
+    printf("\n-------------------------------------------------------\n");
+    printf("\n-------------------------------------------------------\n");
+    printf("\n\t\t\tscheduer finished\n");
+    printf("\n-------------------------------------------------------\n");
+    printf("\n-------------------------------------------------------\n");
+    return 0;
+}
+void process_terminated(int signum){
+   if(terminated_process!=NULL){
+    printf("\n Process %d WAS TERMINATED at %d ",terminated_process->id,terminated_process->turnaround_time);
+    free(terminated_process);  
+    terminated_process=NULL;
+   }else 
+        printf("TERMINATION NOT DONT YET\n");
+}
+void process_generator_terminated(int signum){
+    no_more_processes_to_recieve=1;
+}
+void rr_start(int quantum){
         terminated_process=NULL;
-        quantum=atoi(argv[2]);
         int pick_new_process=quantum;
         int next_time=getClk();
         running_process=NULL;
-        int g=20;
-        while (1)
+        while (running_process!=NULL||!no_more_processes_to_recieve||!isEmpty(&process_queue))
         {  
             if((next_time+1)==getClk()){
                 printf("next time:%d clk:%d\n",next_time,getClk());
@@ -59,6 +100,9 @@ int main(int argc, char *argv[]) {
                         pick_new_process=quantum;
                     }else
                     pick_new_process++;
+                 }else{
+                    ideal_time++;
+                    printf("/////////*************////////////cpu is ideal now \n");
                  }
             }   
             int rec_val= msgrcv(q_id, &message, sizeof(message.process),0, IPC_NOWAIT);
@@ -108,6 +152,7 @@ int main(int argc, char *argv[]) {
                         strcpy(running_process->state,"finish");
                         running_process->turnaround_time=getClk()-running_process->arrival;
                         //Waiting Time = Turnaround Time - running time
+                        running_process->WTA=running_process->turnaround_time*1.0/running_process->runtime;
                         running_process->waiting_time=running_process->turnaround_time-running_process->runtime;
                         terminated_process=running_process;                        
                     }else{
@@ -118,12 +163,7 @@ int main(int argc, char *argv[]) {
                         enqueue(&process_queue,running_process);
                     }
                     
-                    update_PCB(running_process,f);
-                    if(!(g--)){
-                        fclose(outputFilePointer);
-                        return 0;
-                        
-                    }
+                    update_PCB(running_process,f);                            
                 }
                 running_process=NULL;
                 //pick new process
@@ -141,24 +181,23 @@ int main(int argc, char *argv[]) {
                     kill(running_process->actual_id,SIGCONT);
                 }
             }
+            
         }
-    }
-    fclose(outputFilePointer);
-    sleep(5);// remove it
-    destroyClk(false);
-    return 0;
+    total_cpu_time=getClk();
+    write_scheduler_perf();
 }
-void process_terminated(int signum){
-//     printf("\n");
-    // while (terminated_process==NULL)
-    // {}
+void write_scheduler_perf(){
+    FILE *perfFilePointer; 
+    perfFilePointer = fopen("./outputs/scheduler.perf", "w");
+    fprintf(perfFilePointer,"total cpu time\t%d\tideal time\t%d\n",total_cpu_time,ideal_time);
+    fprintf(perfFilePointer,"CPU Utilization\t%.2f\n",(total_cpu_time-ideal_time)*100.0/total_cpu_time);
+    //fprintf(perfFilePointer,"CPU Utilization\t%.2f\n",total_non_ideal_time*1.0/total_cpu_time);
+    avg_wating_time/=number_of_processes;
+    avg_WTA/=number_of_processes;
+    std_WTA=(sum_WTA_squared/number_of_processes) - (avg_WTA*avg_WTA);
+    std_WTA=sqrt(std_WTA);
+    fprintf(perfFilePointer,"Avg WTA\t%.2f\n",avg_WTA);
+    fprintf(perfFilePointer,"Avg Waiting\t%.2f\n",avg_wating_time);
+    fprintf(perfFilePointer,"std WTA\t%.2f\n",std_WTA);
 
-   if(terminated_process!=NULL){
-        //printf("&&&&&*ERROR IN TERMINATING THE PROCESS*&&&&&");
-    printf("\n Process %d WAS TERMINATED at %d ",terminated_process->id,terminated_process->turnaround_time);
-    free(terminated_process);  
-    terminated_process=NULL;
-   }else 
-        printf("TERMINATION NOT DONT YET\n");
 }
-

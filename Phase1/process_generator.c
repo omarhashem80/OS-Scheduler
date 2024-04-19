@@ -115,8 +115,11 @@ int main(int argc, char * argv[])
         }
         
     }
-    // 7. Clear clock resources
+    //send singal to inform the scheduler that there is no incoming processes
+    kill(schdeulerid,SIGUSR2);
+    //wait the scduler to finish
     waitpid(schdeulerid,&x,0);
+    // 7. Clear clock resources
     destroyClk(true);
     // 8. Clear queue resources
     destroyQueue(&processQueue);
