@@ -22,11 +22,14 @@
 // Define a structure for the process
 struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
+    char state[20];
+    /*
     enum {
         RUNNING,
         TERMINATED,
         WAITING
-    } state;
+    } state
+    */
 };
 
 // Define a structure for the node in the queue
