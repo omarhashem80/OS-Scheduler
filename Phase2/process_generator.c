@@ -42,17 +42,18 @@ void readInputFile(const char *filename, struct Queue *queue) {
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
-    int algorithmNO,timeSlice = -1;   
-    char * path = argv[2];
-    initializeQueue(&processQueue);
-    readInputFile(path,&processQueue);
-    algorithmNO = atoi(argv[1]);
-    timeSlice = atoi(argv[3]);
     for(int i=1; i< argc; i++)
         printf("%s\n",argv[i]);
-
+    int algorithmNO,timeSlice = -1;   
+    char * path = argv[2];
+    // TODO Initialization
+    // 1. Read the input files.
+    initializeQueue(&processQueue);
+    readInputFile(path,&processQueue);
+    // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
+    algorithmNO = atoi(argv[1]);
+    timeSlice = atoi(argv[3]);
     // 3. Initiate and create the scheduler and clock processes.
-
     int pid = fork();
     if (pid == -1) {
         perror("Fork failed");
@@ -103,6 +104,10 @@ int main(int argc, char * argv[])
         }
         
     }
+    //send singal to inform the scheduler that there is no incoming processes
+    kill(schdeulerid,SIGUSR2);
+    //wait the scduler to finish
+    waitpid(schdeulerid,&x,0);
     // 7. Clear clock resources
     destroyClk(true);
     // 8. Clear queue resources
