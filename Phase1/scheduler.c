@@ -36,7 +36,7 @@ void process_terminated(int signum);
 void process_generator_terminated(int signum);
 void rr_start(int quantum);
 void write_scheduler_perf();
-void receive_processes(int q_id, bool WAIT);
+//void receive_processes(int q_id, bool WAIT);
 void hpf_start();
 void update_PCB(struct Process * p,int finished){
     //waiting time =current time- arrival time-time taken in cpu uptil now
@@ -135,11 +135,11 @@ void rr_start(int quantum){
                 strcpy(p->state,"stopped\0");
                 if(allocate_memory(p)){
                     fork_process(p);
-                    
+                    enqueue(&process_queue, p);
                 }else{
                     pushPQ(&waiting_queue,p,true);
                 }
-            
+                
             }
 
             if((pick_new_process==quantum)){
@@ -221,59 +221,60 @@ void write_scheduler_perf(){
     fprintf(perfFilePointer,"std WTA\t%.2f\n",std_WTA);
 
 }
-void receive_processes(int q_id, bool WAIT) 
-{
-    int rec_val;
-    if(WAIT) {
-        rec_val= msgrcv(q_id, &message, sizeof(message.process),0, !IPC_NOWAIT);
-        printf("---%d\n", rec_val);
-        sleep(2);
-    }else {
-        rec_val= msgrcv(q_id, &message, sizeof(message.process),0, IPC_NOWAIT);
-        printf("floor\n");
-    }
-    //printf("FROM SCHDULER FILE :: HI:%d \n",message.process->id);
-    //printf("FROM SCHDULER FILE :: shceduler recieved val%d \n",rec_val);
 
-    if(rec_val!=-1){//new process arrives
-        // if(message == NULL) {
-        //     printf("ok222\n");
-        // }
+// void receive_processes(int q_id, bool WAIT) 
+// {
+//     int rec_val;
+//     if(WAIT) {
+//         rec_val= msgrcv(q_id, &message, sizeof(message.process),0, !IPC_NOWAIT);
+//         printf("---%d\n", rec_val);
+//         sleep(2);
+//     }else {
+//         rec_val= msgrcv(q_id, &message, sizeof(message.process),0, IPC_NOWAIT);
+//         printf("floor\n");
+//     }
+//     //printf("FROM SCHDULER FILE :: HI:%d \n",message.process->id);
+//     //printf("FROM SCHDULER FILE :: shceduler recieved val%d \n",rec_val);
+
+//     if(rec_val!=-1){//new process arrives
+//         // if(message == NULL) {
+//         //     printf("ok222\n");
+//         // }
         
-        printf("FROM SCHDULER FILE :: new process arrived at:%d\n",message.process.arrival);                
-        // printf("FROM SCHDULER FILE :: schulder id :%d\n",getpid());
+//         printf("FROM SCHDULER FILE :: new process arrived at:%d\n",message.process.arrival);                
+//         // printf("FROM SCHDULER FILE :: schulder id :%d\n",getpid());
         
-        // Convert the integer to a string
-        char runtime[20]; 
-        sprintf(runtime, "%d", message.process.runtime);
-        char id [20]; 
-        sprintf(id, "%d", message.process.id);
-        int pid=fork();
-        if(pid==0){
-            // printf("FROM SCHDULER FILE :: process id :%d\n",getpid());
-            // execl("./process.out",runtime,message.process.id,NULL);
-        char* processArguments[]={"process.out", runtime, id, NULL};
-        execv(realpath("process.out", NULL),processArguments);
-        }
-        // 
-        struct Process * p=malloc(sizeof(struct Process));
-        p->actual_id=pid;
-        p->runtime=message.process.runtime;
-        p->arrival=message.process.arrival;
-        p->id=message.process.id;
-        p->remaining_time=message.process.runtime;
-        strcpy(p->state,"stopped\0");
-        printf("FROM SCHDULER FILE3 :: schulder id :%d\n",getpid());
-        p->priority=message.process.priority;
-        // 
-        kill(pid,SIGTSTP);
-        printf("FROM SCHDULER FILE4 :: schulder id :%d\n",getpid());
-        message.process.actual_id=pid;
-        message.process.remaining_time=message.process.runtime;
-        pushPQ(&process_queue,p,false);
-        //go into while loop each time send the new remaining time to this process
-    }
-}
+//         // Convert the integer to a string
+//         char runtime[20]; 
+//         sprintf(runtime, "%d", message.process.runtime);
+//         char id [20]; 
+//         sprintf(id, "%d", message.process.id);
+//         int pid=fork();
+//         if(pid==0){
+//             // printf("FROM SCHDULER FILE :: process id :%d\n",getpid());
+//             // execl("./process.out",runtime,message.process.id,NULL);
+//         char* processArguments[]={"process.out", runtime, id, NULL};
+//         execv(realpath("process.out", NULL),processArguments);
+//         }
+//         // 
+//         struct Process * p=malloc(sizeof(struct Process));
+//         p->actual_id=pid;
+//         p->runtime=message.process.runtime;
+//         p->arrival=message.process.arrival;
+//         p->id=message.process.id;
+//         p->remaining_time=message.process.runtime;
+//         strcpy(p->state,"stopped\0");
+//         printf("FROM SCHDULER FILE3 :: schulder id :%d\n",getpid());
+//         p->priority=message.process.priority;
+//         // 
+//         kill(pid,SIGTSTP);
+//         printf("FROM SCHDULER FILE4 :: schulder id :%d\n",getpid());
+//         message.process.actual_id=pid;
+//         message.process.remaining_time=message.process.runtime;
+//         pushPQ(&process_queue,p,false);
+//         //go into while loop each time send the new remaining time to this process
+//     }
+// }
 void hpf_start(){
         terminated_process=NULL;
         int next_time=getClk();
@@ -300,29 +301,19 @@ void hpf_start(){
             int f=0;
             if(rec_val!=-1){//new process arrives
                 printf("FROM SCHDULER FILE :: new process arrived at:%d\n",message.process.arrival);                
-                char runtime[20]; 
-                sprintf(runtime, "%d", message.process.runtime);
-                char id [20]; 
-                sprintf(id, "%d", message.process.id);
-                int pid=fork();
-                if(pid==0){
-                   // printf("FROM SCHDULER FILE :: process id :%d\n",getpid());
-                   // execl("./process.out",runtime,message.process.id,NULL);
-                   char* processAgruments[]={"process.out", runtime,id, NULL};
-                    execv(realpath("process.out", NULL),processAgruments);
-                }
                 struct Process * p=malloc(sizeof(struct Process));
-                p->actual_id=pid;
                 p->runtime=message.process.runtime;
                 p->arrival=message.process.arrival;
                 p->id=message.process.id;
                 p->remaining_time=message.process.runtime;
-                strcpy(p->state,"stopped\0");
-                printf("FROM SCHDULER FILE5 :: schulder id :%d\n",getpid());
                 p->priority=message.process.priority;
-                // enqueue(&process_queue,p);
-                pushPQ(&process_queue, p,false);
-                kill(pid,SIGTSTP);
+                strcpy(p->state,"stopped\0");
+                if(allocate_memory(p)){
+                    fork_process(p);
+                    pushPQ(&process_queue, p,false);
+                }else{
+                    pushPQ(&waiting_queue,p,true);
+                }
             }
             if((running_process && running_process->remaining_time==0) || flag){
                 if(running_process!=NULL){
@@ -391,8 +382,8 @@ void fork_process(struct Process * p){
         execv(realpath("process.out", NULL),processAgruments);
     }
     p->actual_id=pid;
-    printf("FROM SCHDULER FILE1 :: schulder id%d : child:%d\n",getpid(),pid);
-    kill(pid,SIGTSTP);
+    kill(p->actual_id,SIGTSTP);
+
 }
 /*
 Phase2 
@@ -422,19 +413,4 @@ char runtime[20];
                 // enqueue(&process_queue,p);
                 pushPQ(&process_queue, p,false);
                 kill(pid,SIGTSTP);
-
-
-                struct Process * p=malloc(sizeof(struct Process));
-                p->runtime=message.process.runtime;
-                p->arrival=message.process.arrival;
-                p->id=message.process.id;
-                p->remaining_time=message.process.runtime;
-                p->priority=message.process.priority;
-                strcpy(p->state,"stopped\0");
-                if(allocate_memory(p)){
-                    fork_process(p);
-                    pushPQ(&process_queue, p,false);
-                }else{
-                    pushPQ(&waiting_queue,p,true);
-                }
 */
