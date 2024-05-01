@@ -24,13 +24,7 @@ struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
     float WTA;
     char state[20];
-    /*
-    enum {
-        RUNNING,
-        TERMINATED,
-        WAITING
-    } state
-    */
+    int end_address,start_address;
 };
 
 // Define a structure for the node in the queue
@@ -181,7 +175,7 @@ void destroyClk(bool terminateAll)
 
 
 // -------------------------------------------------------
-void pushPQ(struct Queue *priority_queue, struct Process *p)  
+void pushPQ(struct Queue *priority_queue, struct Process *p,bool is_waiting_queue)  
 {  
     struct Node *start = priority_queue->front;
 
@@ -191,7 +185,9 @@ void pushPQ(struct Queue *priority_queue, struct Process *p)
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
-
+    if(is_waiting_queue){
+        p->priority= -(p->remaining_time);
+    }
     newNode->data = p;
     newNode->next = NULL;
 
