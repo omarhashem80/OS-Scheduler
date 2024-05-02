@@ -58,24 +58,25 @@ def create_dataframe_from_log_file(file_path):
 
     return df
 
-def plot_dataframe_as_table(df, image_path):
+def plot_dataframe_as_table(df, image_path, dpi=300):
     """
-    Plot a DataFrame as a table and save it as an image file.
+    Plot a DataFrame as a table and save it as an image file with increased resolution.
     Args:
         df (pandas.DataFrame): DataFrame to be plotted.
         image_path (str): Path to save the image file.
+        dpi (int): Dots per inch for the resolution of the image (default is 300).
     """
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.axis('tight')
     ax.axis('off')
     table = ax.table(cellText=df.values, colLabels=df.columns, loc='center')
-    plt.savefig(image_path, bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(image_path, bbox_inches='tight', pad_inches=0.1, dpi=dpi)
     plt.show()
 
 if __name__ == "__main__":
     # File paths
-    perf_file_path = 'Phase1/outputs/scheduler.perf'
-    log_file_path = 'Phase1/outputs/scheduler.log'
+    perf_file_path = 'outputs/scheduler.perf'
+    log_file_path = 'outputs/scheduler.log'
 
     # Process performance file
     perf_df = create_dataframe_from_perf_file(perf_file_path)

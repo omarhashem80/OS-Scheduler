@@ -57,20 +57,20 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
     // Wait for the child process to finish
     wait(NULL);
-    // pid_output = fork();
-    // if (pid == -1) {
-    //     perror("fork");
-    //     exit(EXIT_FAILURE);
-    // }
+    pid_output = fork();
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
 
-    // if (pid == 0) { // Child process
-    //     // Execute converter.py
-    //     system("/usr/bin/python3 converter.py");
-    //     perror("execl");
-    //     exit(EXIT_FAILURE);
-    // }
-    // wait(NULL);
-    // Show the submit button again after processing
+    if (pid == 0) { // Child process
+        // Execute converter.py
+        system("python3 converter.py");
+        perror("execl");
+        exit(EXIT_FAILURE);
+    }
+    wait(NULL);
+   // Show the submit button again after processing
     gtk_widget_show(submit);
 }
 
