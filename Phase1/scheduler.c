@@ -46,7 +46,16 @@ void update_PCB(struct Process * p,int finished){
         fprintf(outputFilePointer,"\n");
 }
 void images(){
-    system("python3 converter.py");
+    int pid = fork();
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+    if (pid == 0) { // Child process
+        // Convert algorithm option and path text to strings
+        system("python3 converter.py");
+        exit(EXIT_FAILURE);
+    }
 }
 int main(int argc, char *argv[]) {
     
@@ -79,6 +88,7 @@ int main(int argc, char *argv[]) {
         rr_start(atoi(argv[2]));
     }
     fclose(outputFilePointer);
+
     sleep(5);
     destroyClk(false);
     printf("\n-------------------------------------------------------\n");
@@ -206,18 +216,21 @@ void rr_start(int quantum){
     write_scheduler_perf();
 }
 void write_scheduler_perf(){
+   
     FILE *perfFilePointer; 
-    perfFilePointer = fopen("./outputs/scheduler.perf", "w");
+    perfFilePointer = fopen("/home/omarhashem/Project/OS-Scheduler/Phase1/outputs/scheduler.perf", "w");
     //fprintf(perfFilePointer,"total cpu time\t%d\tideal time\t%d\n",total_cpu_time,ideal_time);
     fprintf(perfFilePointer,"CPU Utilization\t%.2f\n",(total_cpu_time-ideal_time)*100.0/total_cpu_time);
     //fprintf(perfFilePointer,"CPU Utilization\t%.2f\n",total_non_ideal_time*1.0/total_cpu_time);
     avg_wating_time/=number_of_processes;
     avg_WTA/=number_of_processes;
     std_WTA=(sum_WTA_squared/number_of_processes) - (avg_WTA*avg_WTA);
-    std_WTA=sqrt(std_WTA);
+    //std_WTA=sqrt(std_WTA);
+
     fprintf(perfFilePointer,"Avg WTA\t%.2f\n",avg_WTA);
     fprintf(perfFilePointer,"Avg Waiting\t%.2f\n",avg_wating_time);
     fprintf(perfFilePointer,"std WTA\t%.2f\n",std_WTA);
+    fclose(perfFilePointer);
 
 }
 void receive_processes(int q_id, bool WAIT) 
