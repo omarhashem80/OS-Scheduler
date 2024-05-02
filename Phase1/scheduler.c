@@ -1,10 +1,11 @@
 #include <math.h>
-#include "headers.h"
+#include"headers.h"
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
 #include<string.h>
 struct Queue process_queue;
+struct PriorityQueue_Ali* pq_Ali ;
 struct Process * running_process;
 struct Process * terminated_process;
 struct msgbuff message;
@@ -27,6 +28,7 @@ void rr_start(int quantum);
 void write_scheduler_perf();
 void receive_processes(int q_id, bool WAIT);
 void hpf_start();
+void strn_start();
 void update_PCB(struct Process * p,int finished){
     //waiting time =current time- arrival time-time taken in cpu uptil now
     p->waiting_time=getClk()-p->arrival-(p->runtime-p->remaining_time);
@@ -42,6 +44,7 @@ void update_PCB(struct Process * p,int finished){
         fprintf(outputFilePointer,"\n");
 }
 int main(int argc, char *argv[]) {
+    
     signal(SIGUSR1, process_terminated);
     signal(SIGUSR2, process_generator_terminated);
     printf("FROM SCHDULER FILE :: Hello from scheduler\n");
@@ -61,10 +64,12 @@ int main(int argc, char *argv[]) {
     initializeQueue(&process_queue);
     initClk();
     // ---------------------------------------------------------------------------------------------------------
-    if(atoi(argv[1])==1) { //HPF
+    if (atoi(argv[1]) == 2) { //HPF
         hpf_start();
-    // ---------------------------------------------------------------------------------------------------------
-    }else if(atoi(argv[1])==3){ //round robin
+        // ---------------------------------------------------------------------------------------------------------
+    }else if (atoi(argv[1]) == 0) { //STRN
+        strn_start();
+    }else if(atoi(argv[1])==1){ //round robin
         rr_start(atoi(argv[2]));
     }
     fclose(outputFilePointer);
@@ -353,4 +358,112 @@ void hpf_start(){
         }
     total_cpu_time=getClk();
     write_scheduler_perf();
+}
+void strn_start() {
+    pq_Ali = createPriorityQueue(10000);
+    printf("ali's task begins\n");
+    terminated_process = NULL;
+    int next_time = getClk();
+    running_process = NULL;
+    while (running_process != NULL || !no_more_processes_to_recieve || !isEmpty_Ali(pq_Ali))
+    {
+        if ((next_time + 1) == getClk()) {
+            printf("next time:%d clk:%d\n", next_time, getClk());
+            //new time unit
+            //you should update process 
+            next_time++;
+            if (running_process != NULL) {
+                running_process->remaining_time--;
+                printf("remaining time of process:%d is %d\n", running_process->id, running_process->remaining_time);
+            }
+            else {
+                ideal_time++;
+                printf("/////////*************////////////cpu is idle now \n");
+            }
+        }
+
+        int rec_val = msgrcv(q_id, &message, sizeof(message.process), 0, IPC_NOWAIT);
+        int f = 0;
+        if (rec_val != -1) {//new process arrives
+            printf("FROM SCHDULER FILE :: new process arrived at:%d\n", message.process.arrival);
+            char runtime[20];
+            sprintf(runtime, "%d", message.process.runtime);
+            char id[20];
+            sprintf(id, "%d", message.process.id);
+            int pid = fork();
+            if (pid == 0) {
+                char* processAgruments[] = { "process.out", runtime, id, NULL };
+                execv(realpath("process.out", NULL), processAgruments);
+            }
+            struct Process* p = malloc(sizeof(struct Process));
+            p->actual_id = pid;
+            p->runtime = message.process.runtime;
+            p->arrival = message.process.arrival;
+            p->id = message.process.id;
+            p->remaining_time = message.process.runtime;
+            strcpy(p->state, "stopped\0");
+            printf("FROM SCHDULER FILE5 :: scheduler id :%d\n", getpid());
+            p->priority = message.process.priority;
+
+            // Enqueue the arriving process
+            insert(pq_Ali, p);
+            kill(pid, SIGTSTP);
+
+            // Check if there's a running process and if the arriving process has a shorter remaining time
+            if (running_process != NULL && p->remaining_time < running_process->remaining_time) {
+                // Preempt the running process
+                strcpy(running_process->state, "preempted");
+                update_PCB(running_process, 0);////////////ask
+                kill(running_process->actual_id, SIGSTOP);
+                // Enqueue the preempted process back into the queue
+                insert(pq_Ali, running_process);
+                // Set the arriving process as the new running process
+                running_process = p;
+            }
+        }
+
+        // Check for process preemption or completion
+        if ((running_process && running_process->remaining_time == 0) || flag) {
+            if (running_process != NULL) {
+                int f = 0;
+                printf("**********************************");
+                printf("signal should be passed to %d", running_process->actual_id);
+                printf("**********************************\n");
+                printf("remaining time should be zero:%d\n", running_process->remaining_time);
+                if (running_process->remaining_time == 0) {
+                    //todo: wait the process for exit code
+                    f = 1;
+                    printf("/////////////////////////////////\n");
+                    printf("Process should terminate if side\n");
+                    printf("/////////////////////////////////\n");
+                    strcpy(running_process->state, "finish");
+                    running_process->turnaround_time = getClk() - running_process->arrival;
+                    //Waiting Time = Turnaround Time - running time
+                    running_process->WTA = running_process->turnaround_time * 1.0 / running_process->runtime;
+                    running_process->waiting_time = running_process->turnaround_time - running_process->runtime;
+                    terminated_process = running_process;
+                }
+                update_PCB(running_process, f);
+            }
+            running_process = NULL;
+
+            //pick new process
+            if (!isEmpty_Ali(pq_Ali)) {
+                flag = false;
+                printf("**********************************");
+                printf("number of processes in the queue:%d", pq_Ali->size);
+                printf("**********************************\n");
+                running_process = extractMin(pq_Ali)->data;
+                strcpy(running_process->state, "resumed");
+                if (running_process->remaining_time == running_process->runtime) {
+                    strcpy(running_process->state, "started");
+                }
+                update_PCB(running_process, 0);
+                kill(running_process->actual_id, SIGCONT);
+            }
+        }
+    }
+    total_cpu_time = getClk();
+    write_scheduler_perf();
+    printf("ali's task done\n");
 }

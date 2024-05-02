@@ -15,6 +15,7 @@ GtkWidget *comboBox;
 GtkWidget *pathLabel;
 GtkWidget *fixed;
 pid_t pid;
+pid_t pid_output;
 
 // Function to handle the submit button click event
 void submit_handler(GtkWidget *widget, gpointer data) {
@@ -40,6 +41,7 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
     if (pid == 0) { // Child process
         // Convert algorithm option and path text to strings
+        //system("python3 converter.py");
         char algo_arg[50];
         char path_arg[100];
         char time_slice_arg[10];
@@ -55,7 +57,19 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
     // Wait for the child process to finish
     wait(NULL);
+    // pid_output = fork();
+    // if (pid == -1) {
+    //     perror("fork");
+    //     exit(EXIT_FAILURE);
+    // }
 
+    // if (pid == 0) { // Child process
+    //     // Execute converter.py
+    //     system("/usr/bin/python3 converter.py");
+    //     perror("execl");
+    //     exit(EXIT_FAILURE);
+    // }
+    // wait(NULL);
     // Show the submit button again after processing
     gtk_widget_show(submit);
 }
@@ -121,7 +135,7 @@ int main(int argc, char *argv[]) {
     gtk_entry_set_text(GTK_ENTRY(pathEntry), "TestCases/processes.txt");
 
     // Populate combo box with algorithm options
-    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboBox), "FCFS");
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboBox), "STRN");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboBox), "RR");
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(comboBox), "HPF");
     gtk_combo_box_set_active(GTK_COMBO_BOX(comboBox), 0);

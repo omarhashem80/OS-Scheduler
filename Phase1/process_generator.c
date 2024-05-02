@@ -43,7 +43,7 @@ int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
     for(int i=1; i< argc; i++)
-        printf("%s\n",argv[i]);
+        printf("generator%s\n",argv[i]);
     int algorithmNO,timeSlice = -1;  
     int schdeulerid;  
     char * path = argv[2];
@@ -60,12 +60,14 @@ int main(int argc, char * argv[])
         perror("Fork failed");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        //printf("child1 to scheduler\n");
+        printf("child1 to scheduler\n");
         char algorithmArg[16], timeSliceArg[16]; // Assuming algorithmNO and timeSlice won't exceed 15 digits
         sprintf(algorithmArg, "%d", algorithmNO);
         sprintf(timeSliceArg, "%d", timeSlice);
         char *schedulerARGS[] = {"scheduler.out", algorithmArg, timeSliceArg, NULL}; 
         execv(realpath("scheduler.out", NULL),schedulerARGS);
+        perror("Scheduler failed\n");
+        exit(EXIT_FAILURE);
     } else{
         schdeulerid = pid;
         pid = fork();
@@ -76,6 +78,8 @@ int main(int argc, char * argv[])
             char * clockARGS [] = {"clk.out", NULL};
             //printf("child2 to clk\n");
             execv(realpath("clk.out", NULL),clockARGS);
+            perror("Child failed\n");
+            exit(EXIT_FAILURE);
         }
     }
     // 4. Use this function after creating the clock process to initialize clock
