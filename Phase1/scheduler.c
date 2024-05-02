@@ -99,18 +99,18 @@ void rr_start(int quantum){
                 printf("next time:%d clk:%d\n",next_time,getClk());
                 //new time unit
                 //you should update process 
-                 next_time++;
-                 if(running_process!=NULL){
+                next_time++;
+                if(running_process!=NULL){
                     running_process->remaining_time--;
                     printf("remaing time of process:%d is %d\n",running_process->id,running_process->remaining_time);
                     if(running_process->remaining_time==0){
                         pick_new_process=quantum;
                     }else
                     pick_new_process++;
-                 }else{
+                }else{
                     ideal_time++;
                     printf("/////////*************////////////cpu is ideal now \n");
-                 }
+                }
             }
             int rec_val= msgrcv(q_id, &message, sizeof(message.process),0, IPC_NOWAIT);
             //printf("FROM SCHDULER FILE :: HI:%d \n",message.process->id);
@@ -127,7 +127,7 @@ void rr_start(int quantum){
                 if(pid==0){
                    // printf("FROM SCHDULER FILE :: process id :%d\n",getpid());
                    // execl("./process.out",runtime,message.process.id,NULL);
-                   char* processAgruments[]={"process.out", runtime,id, NULL};
+                    char* processAgruments[]={"process.out", runtime,id, NULL};
                     execv(realpath("process.out", NULL),processAgruments);
                 }
                 struct Process * p=malloc(sizeof(struct Process));
@@ -143,7 +143,7 @@ void rr_start(int quantum){
                 kill(pid,SIGTSTP);
             }
 
-            if((pick_new_process==quantum)){
+            if(pick_new_process==quantum){
                 if(running_process!=NULL){
                     int f=0;
                     printf("**********************************");
@@ -271,15 +271,15 @@ void hpf_start(){
                 printf("next time:%d clk:%d\n",next_time,getClk());
                 //new time unit
                 //you should update process 
-                 next_time++;
-                 if(running_process!=NULL){
+                next_time++;
+                if(running_process!=NULL){
                     running_process->remaining_time--;
                     printf("remaing time of process:%d is %d\n",running_process->id,running_process->remaining_time);
                     
-                 }else{
+                }else{
                     ideal_time++;
                     printf("/////////*************////////////cpu is ideal now \n");
-                 }
+                }
             }
             int rec_val= msgrcv(q_id, &message, sizeof(message.process),0, IPC_NOWAIT);
             //printf("FROM SCHDULER FILE :: HI:%d \n",message.process->id);
@@ -296,7 +296,7 @@ void hpf_start(){
                 if(pid==0){
                    // printf("FROM SCHDULER FILE :: process id :%d\n",getpid());
                    // execl("./process.out",runtime,message.process.id,NULL);
-                   char* processAgruments[]={"process.out", runtime,id, NULL};
+                    char* processAgruments[]={"process.out", runtime,id, NULL};
                     execv(realpath("process.out", NULL),processAgruments);
                 }
                 struct Process * p=malloc(sizeof(struct Process));
@@ -336,8 +336,8 @@ void hpf_start(){
                     update_PCB(running_process,f);                            
                 }
                 running_process=NULL;
-                //pick new process
-                if(!isEmpty(&process_queue)){
+            }
+            if(!running_process && !isEmpty(&process_queue)){
                     flag=false;
                     printf("**********************************");
                     printf("number of processes in the queue:%d",process_queue.size);
@@ -350,7 +350,6 @@ void hpf_start(){
                     update_PCB(running_process,0);
                     kill(running_process->actual_id,SIGCONT);
                 }
-            }
         }
     total_cpu_time=getClk();
     write_scheduler_perf();

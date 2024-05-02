@@ -194,7 +194,9 @@ void pushPQ(struct Queue *priority_queue, struct Process *p)
 
     newNode->data = p;
     newNode->next = NULL;
-
+    if(priority_queue->size == 0) { 
+        printf("size: 0\n");
+    }
     if (!priority_queue->front) {
         priority_queue->front = priority_queue->rear = newNode;
     } else {
