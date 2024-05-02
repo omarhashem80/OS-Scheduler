@@ -39,29 +39,21 @@ void readInputFile(const char *filename, struct Queue *queue) {
     // Close the file
     fclose(file);
 }
-
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
-    int algorithmNO,timeSlice = -1;
-    int schdeulerid;   
-    // signal(SIGINT, clearResources);
+    for(int i=1; i< argc; i++)
+        printf("%s\n",argv[i]);
+    int algorithmNO,timeSlice = -1;  
+    int schdeulerid;  
+    char * path = argv[2];
     // TODO Initialization
     // 1. Read the input files.
-    //struct Queue processQueue;
     initializeQueue(&processQueue);
-    readInputFile("./TestCases/processes.txt",&processQueue);
+    readInputFile(path,&processQueue);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
-    printf("Enter the number corresponding to the scheduling algorithm:\n");
-    printf("1. Non-preemptive Highest Priority First (HPF)\n");
-    printf("2. Shortest Remaining time Next (STRN)\n");
-    printf("3. Round Robin (RR)\n");
-    scanf("%d", &algorithmNO);
-    if (algorithmNO == 3) {
-        printf("Enter the time quantum for Round Robin: ");
-        scanf("%d", &timeSlice);
-    }
-    printf("%d\n", algorithmNO);
+    algorithmNO = atoi(argv[1]);
+    timeSlice = atoi(argv[3]);
     // 3. Initiate and create the scheduler and clock processes.
     int pid = fork();
     if (pid == -1) {
@@ -75,7 +67,7 @@ int main(int argc, char * argv[])
         char *schedulerARGS[] = {"scheduler.out", algorithmArg, timeSliceArg, NULL}; 
         execv(realpath("scheduler.out", NULL),schedulerARGS);
     } else{
-        schdeulerid=pid;
+        schdeulerid = pid;
         pid = fork();
         if(pid==-1){
             perror("Fork failed");
@@ -99,11 +91,10 @@ int main(int argc, char * argv[])
      if (q_id == -1){
         perror("Error in create up queue");
         exit(-1);
-    }    
+    }
     while(!isEmpty(&processQueue)){
         struct Process *p = peek(&processQueue);
         if(p->arrival== getClk()){
-            printf("PORCESS GENERATOR: new process arrive with id :%d\n",p->id);
             struct msgbuff message;
             message.process = *p;
             message.mtype = 5;
@@ -125,9 +116,3 @@ int main(int argc, char * argv[])
     destroyQueue(&processQueue);
     return 0;
 }
-
-
-
-
-
-
