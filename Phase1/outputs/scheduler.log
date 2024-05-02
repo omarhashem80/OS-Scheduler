@@ -1,0 +1,4 @@
+At time	2	process	1	started	arrive	2	total	3	remain	3	wait	0
+At time	5	process	1	finish	arrive	2	total	3	remain	0	wait	0	TA	3	WTA	1.00
+At time	7	process	2	started	arrive	7	total	3	remain	3	wait	0
+At time	10	process	2	finish	arrive	7	total	3	remain	0	wait	0	TA	3	WTA	1.00

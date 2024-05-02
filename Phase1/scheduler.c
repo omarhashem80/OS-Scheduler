@@ -45,6 +45,9 @@ void update_PCB(struct Process * p,int finished){
     }else
         fprintf(outputFilePointer,"\n");
 }
+void images(){
+    system("python3 converter.py");
+}
 int main(int argc, char *argv[]) {
     
     signal(SIGUSR1, process_terminated);
@@ -83,6 +86,7 @@ int main(int argc, char *argv[]) {
     printf("\n\t\t\tscheduer finished\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
+    images();
     return 0;
 }
 void process_terminated(int signum){

@@ -66,6 +66,10 @@ def plot_dataframe_as_table(df, image_path, dpi=300):
         image_path (str): Path to save the image file.
         dpi (int): Dots per inch for the resolution of the image (default is 300).
     """
+    if df.empty:
+        print("DataFrame is empty. Cannot plot table.")
+        return
+
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.axis('tight')
     ax.axis('off')

@@ -15,7 +15,6 @@ GtkWidget *comboBox;
 GtkWidget *pathLabel;
 GtkWidget *fixed;
 pid_t pid;
-pid_t pid_output;
 
 // Function to handle the submit button click event
 void submit_handler(GtkWidget *widget, gpointer data) {
@@ -41,7 +40,6 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
     if (pid == 0) { // Child process
         // Convert algorithm option and path text to strings
-        //system("python3 converter.py");
         char algo_arg[50];
         char path_arg[100];
         char time_slice_arg[10];
@@ -57,19 +55,7 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
     // Wait for the child process to finish
     wait(NULL);
-    pid_output = fork();
-    if (pid == -1) {
-        perror("fork");
-        exit(EXIT_FAILURE);
-    }
-
-    if (pid == 0) { // Child process
-        // Execute converter.py
-        system("python3 converter.py");
-        perror("execl");
-        exit(EXIT_FAILURE);
-    }
-    wait(NULL);
+    
    // Show the submit button again after processing
     gtk_widget_show(submit);
 }
