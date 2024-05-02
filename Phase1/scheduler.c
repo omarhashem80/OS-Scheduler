@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include<string.h>
+
 struct Queue process_queue;
 struct PriorityQueue_Ali* pq_Ali ;
 struct Process * running_process;
@@ -22,6 +23,7 @@ int q_id;
 bool flag=true;
 int no_more_processes_to_recieve=0;
 FILE *outputFilePointer; // Declare a file pointer
+
 void process_terminated(int signum);
 void process_generator_terminated(int signum);
 void rr_start(int quantum);
@@ -52,6 +54,7 @@ int main(int argc, char *argv[]) {
     printf("FROM SCHDULER FILE :: algo: %s\n", argv[1]); 
     printf("FROM SCHDULER FILE :: timeSlice: %s\n", argv[2]); 
     outputFilePointer = fopen("./outputs/scheduler.log", "w");
+    
     if (outputFilePointer == NULL) {
         printf("Error opening the file.\n");
         return 1; // Exit with an error code
@@ -361,7 +364,7 @@ void hpf_start(){
 }
 void strn_start() {
     pq_Ali = createPriorityQueue(10000);
-    printf("ali's task begins\n");
+    printf("Ali's task begins\n");
     terminated_process = NULL;
     int next_time = getClk();
     running_process = NULL;
@@ -394,6 +397,7 @@ void strn_start() {
             if (pid == 0) {
                 char* processAgruments[] = { "process.out", runtime, id, NULL };
                 execv(realpath("process.out", NULL), processAgruments);
+                exit(EXIT_FAILURE);
             }
             struct Process* p = malloc(sizeof(struct Process));
             p->actual_id = pid;
@@ -402,7 +406,7 @@ void strn_start() {
             p->id = message.process.id;
             p->remaining_time = message.process.runtime;
             strcpy(p->state, "stopped\0");
-            printf("FROM SCHDULER FILE5 :: scheduler id :%d\n", getpid());
+            printf("FROM SCHEDULER FILE5 :: scheduler id :%d\n", getpid());
             p->priority = message.process.priority;
 
             // Enqueue the arriving process
@@ -425,18 +429,22 @@ void strn_start() {
         // Check for process preemption or completion
         if ((running_process && running_process->remaining_time == 0) || flag) {
             if (running_process != NULL) {
+
                 int f = 0;
                 printf("**********************************");
                 printf("signal should be passed to %d", running_process->actual_id);
                 printf("**********************************\n");
                 printf("remaining time should be zero:%d\n", running_process->remaining_time);
+
                 if (running_process->remaining_time == 0) {
                     //todo: wait the process for exit code
                     f = 1;
                     printf("/////////////////////////////////\n");
                     printf("Process should terminate if side\n");
                     printf("/////////////////////////////////\n");
+
                     strcpy(running_process->state, "finish");
+
                     running_process->turnaround_time = getClk() - running_process->arrival;
                     //Waiting Time = Turnaround Time - running time
                     running_process->WTA = running_process->turnaround_time * 1.0 / running_process->runtime;
@@ -453,17 +461,21 @@ void strn_start() {
                 printf("**********************************");
                 printf("number of processes in the queue:%d", pq_Ali->size);
                 printf("**********************************\n");
+
                 running_process = extractMin(pq_Ali)->data;
+
                 strcpy(running_process->state, "resumed");
                 if (running_process->remaining_time == running_process->runtime) {
                     strcpy(running_process->state, "started");
                 }
+
                 update_PCB(running_process, 0);
                 kill(running_process->actual_id, SIGCONT);
             }
         }
     }
+
     total_cpu_time = getClk();
     write_scheduler_perf();
-    printf("ali's task done\n");
+    printf("Ali's task done\n");
 }

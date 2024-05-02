@@ -42,9 +42,11 @@ void readInputFile(const char *filename, struct Queue *queue) {
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
+
     for(int i=1; i< argc; i++)
         printf("generator%s\n",argv[i]);
-    int algorithmNO,timeSlice = -1;  
+
+    int algorithmNO, timeSlice = -1;  
     int schdeulerid;  
     char * path = argv[2];
     // TODO Initialization

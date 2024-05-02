@@ -20,7 +20,7 @@ void stop_process(int signum) {
 }
 
 int main(int argc, char *argv[]) {
-        // Register signal handlers
+    // Register signal handlers
     signal(SIGCONT, resume_process);
     signal(SIGTSTP, stop_process);
      // Check if the correct number of command-line arguments is provided
