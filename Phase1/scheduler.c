@@ -7,11 +7,13 @@
 /*
 Phase 2
 */
-bool memory[1024][1024];
+int starter_locations[1024]={0};
 struct Queue waiting_queue;
 bool allocate_memory(struct Process * p);
-void deallocate_memory(int i,int j);
+void deallocate_memory(int i);
 void fork_process(struct Process * p);
+FILE *memory_output_file;
+
 /*
 Phase 2
 */
@@ -52,6 +54,14 @@ void update_PCB(struct Process * p,int finished){
     }else
         fprintf(outputFilePointer,"\n");
 }
+void memory_log(struct Process * p,int allocated){
+    //waiting time =current time- arrival time-time taken in cpu uptil now
+    char status[]="allocated";
+    if(!allocated){
+        strcpy(status,"freed");
+    }
+    fprintf(memory_output_file, "At time\t%d\t%s\t%d\tbytes\tfor\tprocess\t%d\tfrom\t%d\tto\t%d\n",getClk(),status,p->max_size,p->id,p->start_address,p->end_address);
+}
 int main(int argc, char *argv[]) {
     signal(SIGUSR1, process_terminated);
     signal(SIGUSR2, process_generator_terminated);
@@ -60,6 +70,7 @@ int main(int argc, char *argv[]) {
     printf("FROM SCHDULER FILE :: algo: %s\n", argv[1]); 
     printf("FROM SCHDULER FILE :: timeSlice: %s\n", argv[2]); 
     outputFilePointer = fopen("./outputs/scheduler.log", "w");
+    memory_output_file = fopen("./outputs/memory.log", "w");
     if (outputFilePointer == NULL) {
         printf("Error opening the file.\n");
         return 1; // Exit with an error code
@@ -132,11 +143,16 @@ void rr_start(int quantum){
                 p->arrival=message.process.arrival;
                 p->id=message.process.id;
                 p->remaining_time=message.process.runtime;
+                p->max_size=message.process.max_size;
+                printf("Max size :%d\n",p->max_size);
                 strcpy(p->state,"stopped\0");
                 if(allocate_memory(p)){
+                    printf("success to allocate\n");
                     fork_process(p);
                     enqueue(&process_queue, p);
+                    memory_log(p,1);
                 }else{
+                    printf("Fail to allocate\n");
                     pushPQ(&waiting_queue,p,true);
                 }
                 
@@ -162,7 +178,8 @@ void rr_start(int quantum){
                         running_process->waiting_time=running_process->turnaround_time-running_process->runtime;
                         terminated_process=running_process; 
                         //free memory after process terminated  
-                        deallocate_memory(terminated_process->start_address,terminated_process->end_address);
+                        deallocate_memory(terminated_process->start_address);
+                        memory_log(running_process,0);
                         //use the freed memory of the terminated process
 
                         while (!isEmpty(&waiting_queue))
@@ -172,6 +189,7 @@ void rr_start(int quantum){
                                 fork_process(p);
                                 enqueue(&process_queue,p);
                                 dequeue(&waiting_queue);
+                                memory_log(p,1);
                             }
                         }
                                               
@@ -360,13 +378,108 @@ void hpf_start(){
 /*
 Phase2 
 */
-void deallocate_memory(int i,int j){
-    memory[i][j]=0;
+void deallocate_memory(int i){
+    starter_locations[i]=-starter_locations[i];
     //call allocate new process after that 
 
 }
+void print_memory(){
+    for (int i = 0; i < 1024; i++)
+    {
+        if(starter_locations[i]!=0){
+        fprintf(memory_output_file,"from index:%d size=%d\n at time:%d",i,starter_locations[i],getClk());  
+
+        }
+    }
+    
+}
 bool allocate_memory(struct Process * p){
-    return true;
+    int x=ceil(log2(p->max_size));
+    int actual_size=pow(2,x);
+    //printf("Actual Size is%d: vs Reserved Size%d from:%d to %d",p->max_size,actual_size);
+    int i=0;
+    int j=i+actual_size-1;
+    bool found=false;
+    int min_deallocated_index=-1;
+    int min_not_allocated_index=-1;
+    while (j<1024)
+    {
+        bool deallcated_mem=starter_locations[i]<0&&(-starter_locations[i])>=actual_size;
+        if(deallcated_mem){
+            if(min_deallocated_index==-1){
+                min_deallocated_index=i;
+            }else
+            if(starter_locations[min_deallocated_index]<starter_locations[i]){
+                min_deallocated_index=i;
+            }
+            printf("deallocated memory at location i:%d=%d\n",i,starter_locations[i]);
+        }
+        if(!found){
+            if(starter_locations[i]==0){
+            found=true;
+            min_not_allocated_index=i;
+            }else{
+                i=(int)fmax(j+1,i+starter_locations[i]);
+            }
+        }else
+            i=j+1;
+
+        j=i+actual_size-1;
+    }
+    if(found){
+        printf("%d and its size:",min_deallocated_index);
+        printf("%d not deallocated",starter_locations[min_not_allocated_index]+actual_size);
+        if(min_deallocated_index!=-1&&((-(starter_locations[min_deallocated_index]))<=(starter_locations[min_not_allocated_index]+actual_size)))
+        {
+        printf("%d\n",starter_locations[min_deallocated_index]);
+            //deallocated mem is smaller than the next availabe index
+            
+            int last_index=min_deallocated_index-starter_locations[min_deallocated_index];
+            j=min_deallocated_index+actual_size;
+            starter_locations[min_deallocated_index]=actual_size;
+            while (j<last_index)
+            {
+                starter_locations[j]=-actual_size;
+                j+=actual_size;
+                actual_size*=2;
+            }
+            p->start_address=min_deallocated_index;
+            p->end_address=min_deallocated_index+actual_size-1;
+
+        }else{
+            starter_locations[min_not_allocated_index]=actual_size;
+            p->start_address=min_not_allocated_index;
+            p->end_address=min_not_allocated_index+actual_size-1;
+        }
+        printf("done, Actual Size is%d: vs Reserved Size%d from:%d to %d\n",p->max_size,j-i+1,i,j);
+       return true;
+    }
+    printf("The memory is full\n");
+    return false;
+    // if(!fff){
+    //    printf("HI\n");
+    //    fff=1;
+    // }
+    // if(i>j)
+    //     return false;
+    // if(memory[i][j]==1){
+    //     return false;
+    // }
+    // //printf("%d\n",p->max_size);
+    // if((j-i+1)< p->max_size)
+    //     return false;
+    // if(allocate_memory(p,i,j/2)){
+    //     return true;
+    // }
+    // if(allocate_memory(p,j/2 +1,j)){
+    //     memory[j/2][j]=1;
+    //     return true;
+    // }
+    // p->start_address=i;
+    // p->end_address=j;
+    // memory[i][j]=1;
+    // printf("Actual Size is%d: vs Reserved Size%d from:%d to %d",p->max_size,j-i+1,i,j);
+    // return true;
 
 }
 void fork_process(struct Process * p){

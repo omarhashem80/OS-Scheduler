@@ -24,7 +24,7 @@ struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
     float WTA;
     char state[20];
-    int end_address,start_address;
+    int end_address,start_address,max_size;
 };
 
 // Define a structure for the node in the queue

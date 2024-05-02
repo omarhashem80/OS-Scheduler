@@ -32,7 +32,9 @@ void readInputFile(const char *filename, struct Queue *queue) {
             perror("Memory allocation failed");
             exit(EXIT_FAILURE);
         }
-        sscanf(line, "%d %d %d %d", &p->id, &p->arrival, &p->runtime, &p->priority);
+
+        sscanf(line, "%d %d %d %d %d", &p->id, &p->arrival, &p->runtime, &p->priority,&p->max_size);
+        //printf("Max size :%d\n",p->max_size);
         enqueue(queue, p);
     }
 
