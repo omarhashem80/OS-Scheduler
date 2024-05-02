@@ -22,11 +22,15 @@
 // Define a structure for the process
 struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
+    float WTA;
+    char state[20];
+    /*
     enum {
         RUNNING,
         TERMINATED,
         WAITING
-    } state;
+    } state
+    */
 };
 
 // Define a structure for the node in the queue
@@ -67,6 +71,7 @@ void enqueue(struct Queue *queue, struct Process *p) {
         queue->rear = newNode;
     }
     queue->size++;
+    
 }
 
 // Function to dequeue a process
@@ -123,7 +128,7 @@ void destroyQueue(struct Queue *queue) {
 struct msgbuff
 {
 	long mtype;
-	struct Process* process;
+	struct Process process;
 };
 
 ///==============================
@@ -172,4 +177,53 @@ void destroyClk(bool terminateAll)
     {
         killpg(getpgrp(), SIGINT);
     }
+}
+
+
+// -------------------------------------------------------
+void pushPQ(struct Queue *priority_queue, struct Process *p)  
+{  
+    struct Node *start = priority_queue->front;
+
+    // Create new Node 
+    struct Node *newNode = (struct Node *)malloc(sizeof(struct Node));
+    if (!newNode) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    newNode->data = p;
+    newNode->next = NULL;
+    if(priority_queue->size == 0) { 
+        printf("size: 0\n");
+    }
+    if (!priority_queue->front) {
+        priority_queue->front = priority_queue->rear = newNode;
+    } else {
+        if (priority_queue->front->data->priority > newNode->data->priority)   //rear don't affect 
+        {  
+            newNode->next = priority_queue->front;
+            priority_queue->front = newNode;
+        }
+        else if(priority_queue->size == 1 && priority_queue->front->data->priority <= newNode->data->priority) { //
+            priority_queue->front->next= newNode;
+            printf("OkOKOK\n");
+        }else
+        {  
+            // Traverse the list and find a  
+            // position to insert new node  
+            while (start->next != NULL && start->next->data->priority <= newNode->data->priority)  
+            {  
+                start = start->next;  
+            }  
+            // Either at the ends of the list  
+            // or at required position  
+            if(!start->next) priority_queue->rear = newNode;
+            newNode->next = start->next;
+            start->next = newNode;
+        }  
+    }
+
+
+    priority_queue->size++;
 }

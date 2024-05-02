@@ -93,7 +93,7 @@ int main(int argc, char * argv[])
         struct Process *p = peek(&processQueue);
         if(p->arrival== getClk()){
             struct msgbuff message;
-            message.process = p;
+            message.process = *p;
             message.mtype = 5;
             int send_val = msgsnd(q_id,  &message, sizeof(message.process), !IPC_NOWAIT);
             if (send_val == -1)
