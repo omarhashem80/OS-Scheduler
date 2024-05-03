@@ -95,6 +95,7 @@ def plot_dataframe_as_table(df, image_path, dpi=500, font_size=8, font_family='A
     
     table.set_fontsize(font_size)
     plt.savefig(image_path, bbox_inches='tight', pad_inches=0.1, dpi=dpi)
+    plt.show();
 
 if __name__ == "__main__":
     # File paths

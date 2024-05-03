@@ -16,6 +16,7 @@ build:
 	gcc process.c -o process.out
 	gcc test_generator.c -o test_generator.out
 	${CC} ${CFLAGS} -o ${PROG_PROCESS_GENERATOR}.out ${PROG_PROCESS_GENERATOR}.c ${LIBS}
+	${CC} ${CFLAGS} -o ${PROG_GUI}.out ${PROG_GUI}.c ${LIBS}
 
 clean:
 	rm -f *.out TestCases/processes.txt

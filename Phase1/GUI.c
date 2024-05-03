@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <sys/shm.h>
 
+#define SHM_SIZE 1024  
 #define FILENAME "file.txt"
 
 // Global variables for widgets
@@ -20,7 +21,6 @@ GtkWidget *pathLabel;
 GtkWidget *fixed;
 pid_t pid;
 int shmid;
-#define SHM_SIZE 1024  
 
 char* reader() {
     void *shmaddr = shmat(shmid, NULL, 0);
@@ -84,8 +84,8 @@ void images(){
 gboolean showButton(gpointer data) {
     
     if(reader()[0] == '1'){
+        //images();
         gtk_widget_set_sensitive(submit, TRUE);
-        images();
     }
         
     // Return TRUE to keep the timeout function running
@@ -131,6 +131,7 @@ void submit_handler(GtkWidget *widget, gpointer data) {
     gdouble timeSliceValue = gtk_range_get_value(GTK_RANGE(timeSliceSlider));
     //begin();
     // Hide the submit button while processing
+    //images();
     gtk_widget_set_sensitive(submit, FALSE);
 
     // Convert algorithm option and path text to strings

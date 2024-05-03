@@ -56,6 +56,7 @@ void images(){
         execlp("python3", "python3", "converter.py", NULL);
         exit(EXIT_FAILURE);
     }
+    wait(NULL);
 }
 int main(int argc, char *argv[]) {
     
@@ -89,14 +90,14 @@ int main(int argc, char *argv[]) {
     }
     fclose(outputFilePointer);
 
+    images();
     sleep(5);
-    //destroyClk(false);
+    destroyClk(false);
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n\t\t\tscheduer finished\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
-    //images();
     return 0;
 }
 void process_terminated(int signum){
@@ -124,8 +125,11 @@ void rr_start(int quantum){
                 next_time++;
                 if(running_process!=NULL){
                     running_process->remaining_time--;
+                    if(running_process->remaining_time<0){
+                       running_process->remaining_time = 0; 
+                    }
                     printf("remaing time of process:%d is %d\n",running_process->id,running_process->remaining_time);
-                    if(running_process->remaining_time==0){
+                    if(running_process->remaining_time<=0){
                         pick_new_process=quantum;
                     }else
                     pick_new_process++;
@@ -394,6 +398,9 @@ void strn_start() {
             next_time++;
             if (running_process != NULL) {
                 running_process->remaining_time--;
+                 if(running_process->remaining_time<0){
+                       running_process->remaining_time = 0; 
+                    }
                 printf("remaining time of process:%d is %d\n", running_process->id, running_process->remaining_time);
             }
             else {

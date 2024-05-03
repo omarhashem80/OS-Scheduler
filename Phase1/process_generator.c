@@ -1,11 +1,11 @@
 #include "headers.h"
 #include<string.h>
 #define FILENAME "file.txt"
+#define SHM_SIZE 1024  
 
 int q_id;
 struct Queue processQueue;
-
-#define SHM_SIZE 1024  
+int shmid;
 
 void writer(int shmid) {
     void *shmaddr = shmat(shmid, NULL, 0);
@@ -23,6 +23,8 @@ void clearResources(int signum)
     msgctl(q_id, IPC_RMID, (struct msqid_ds *)0);
     destroyQueue(&processQueue);
     //TODO: clear shm
+    shmdt(shmaddr);
+    shmctl(shmid, IPC_RMID, (struct shmid_ds *)0);
     kill(0, SIGINT);
     exit(0);
 }
@@ -152,7 +154,6 @@ int main(int argc, char * argv[])
     printf("sbye\n");
     // 7. Clear queue resources
     destroyQueue(&processQueue);
-    int shmid;
     key_t key = 50;  // Generate a key for the shared memory segment
     shmid = shmget(key, 4096, IPC_CREAT | 0666);
     // Create a shared memory segment
