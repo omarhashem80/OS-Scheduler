@@ -1,7 +1,21 @@
 #include "headers.h"
+#include<string.h>
+#define FILENAME "file.txt"
 
 int q_id;
 struct Queue processQueue;
+
+#define SHM_SIZE 1024  
+
+void writer(int shmid) {
+    void *shmaddr = shmat(shmid, NULL, 0);
+    if (shmaddr == (void *)-1) {
+        perror("Error in attach in writer");
+        exit(EXIT_FAILURE);
+    }
+    strcpy((char *)shmaddr, "1"); 
+    shmdt(shmaddr);
+}
 
 void clearResources(int signum)
 {
@@ -39,6 +53,22 @@ void readInputFile(const char *filename, struct Queue *queue) {
     // Close the file
     fclose(file);
 }
+
+// void end() {
+//     // Open the file for writing
+//     FILE *file = fopen(FILENAME, "w");
+//     if (file == NULL) {
+//         perror("Error opening file");
+//         return;
+//     }
+
+//     // Write data to the file
+//     char data[] = "1";
+//     fprintf(file, "%s", data);
+
+//     // Close the file
+//     fclose(file);
+// }
 
 int main(int argc, char * argv[])
 {
@@ -118,9 +148,21 @@ int main(int argc, char * argv[])
     kill(schedulerID, SIGUSR2);
     //wait the scduler to finish
     waitpid(schedulerID, NULL, 0);
-    // 7. Clear clock resources
-    destroyClk(true);
-    // 8. Clear queue resources
+    printf("sbye\n");
+    // 7. Clear queue resources
     destroyQueue(&processQueue);
+    int shmid;
+    key_t key = 50;  // Generate a key for the shared memory segment
+    shmid = shmget(key, 4096, IPC_CREAT | 0666);
+    // Create a shared memory segment
+    if (shmid < 0 ){
+        perror("shmget");
+        exit(EXIT_FAILURE);
+    }
+    
+    writer(shmid);  // Write to shared memory
+    //end();
+    // 8. Clear clock resources
+    destroyClk(true);
     return 0;
 }

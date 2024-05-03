@@ -22,9 +22,11 @@ def create_dataframe_from_perf_file(file_path):
         pandas.DataFrame: DataFrame created from the text file.
     """
     lines = read_text_file(file_path)
+    if not lines:
+        return None
     data = [line.strip().split('\t') for line in lines]
     df = pd.DataFrame(data, columns=['Metric', 'Value'])
-    df['Value'] = pd.to_numeric(df['Value'])
+    df['Value'] = pd.to_numeric(df['Value'], errors='ignore')
     return df
 
 def create_dataframe_from_log_file(file_path):
@@ -39,6 +41,10 @@ def create_dataframe_from_log_file(file_path):
     data = {'At time':[], 'process' : [], 'status' : [], 'arrive' : [], 'total' : [], 'remain' : [], 'wait' : [], 'TA' : [], 'WTA' : []}
     
     lines = read_text_file(file_path)
+
+    if not lines:
+        return pd.DataFrame()
+    
     for line in lines:
         parts = line.strip().split('\t')
         data['At time'].append(parts[parts.index('At time') + 1])
@@ -65,7 +71,7 @@ def plot_dataframe_as_table(df, image_path, dpi=500, font_size=8, font_family='A
         font_size (int): Font size for the table cells (default is 12).
         font_family (str): Font family for the table cells (default is 'Arial').
         cell_pad (float): Padding for the cells (default is 0.1).
-    """
+    """ 
     if df.empty:
         print("DataFrame is empty. Cannot plot table.")
         return

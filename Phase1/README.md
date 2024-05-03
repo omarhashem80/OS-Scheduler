@@ -28,6 +28,11 @@ The project will be divided into the following components:
 
 5. **Input/Output**: Handles input and output operations, including reading process information from input files and generating output files containing scheduling logs and performance metrics.
 
+6. **Install Dependencies**: Use pip to install the required Python packages listed in `requirements.txt`:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ## Contributors
 

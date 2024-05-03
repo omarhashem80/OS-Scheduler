@@ -90,13 +90,13 @@ int main(int argc, char *argv[]) {
     fclose(outputFilePointer);
 
     sleep(5);
-    destroyClk(false);
+    //destroyClk(false);
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n\t\t\tscheduer finished\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
-    images();
+    //images();
     return 0;
 }
 void process_terminated(int signum){
@@ -225,7 +225,7 @@ void write_scheduler_perf(){
     avg_wating_time/=number_of_processes;
     avg_WTA/=number_of_processes;
     std_WTA=(sum_WTA_squared/number_of_processes) - (avg_WTA*avg_WTA);
-    //std_WTA=sqrt(std_WTA);
+    std_WTA=sqrt(std_WTA);
 
     fprintf(perfFilePointer,"Avg WTA\t%.2f\n",avg_WTA);
     fprintf(perfFilePointer,"Avg Waiting\t%.2f\n",avg_wating_time);
