@@ -35,47 +35,60 @@ def create_dataframe_from_log_file(file_path):
     Returns:
         pandas.DataFrame: DataFrame created from the text file.
     """
+   
+    data = {'At time':[], 'process' : [], 'status' : [], 'arrive' : [], 'total' : [], 'remain' : [], 'wait' : [], 'TA' : [], 'WTA' : []}
+    
     lines = read_text_file(file_path)
-    data = []
     for line in lines:
         parts = line.strip().split('\t')
-        new_parts = []
-        for part in parts:
-            if ':' in part:
-                new_parts.extend(part.split(':'))
-            else:
-                new_parts.append(part)
-        data.append(new_parts)
+        data['At time'].append(parts[parts.index('At time') + 1])
+        data['process'].append(parts[parts.index('process') + 1])
+        data['status'].append(parts[parts.index('process') + 2])
+        data['arrive'].append(parts[parts.index('arrive') + 1])
+        data['total'].append(parts[parts.index('total') + 1])
+        data['remain'].append(parts[parts.index('remain') + 1])
+        data['wait'].append(parts[parts.index('wait') + 1])
+        TA = parts[parts.index('TA') + 1] if 'TA' in parts else None
+        data['TA'].append(TA)
+        WTA = parts[parts.index('WTA') + 1] if 'WTA' in parts else None
+        data['WTA'].append(WTA)
+    df = pd.DataFrame(data)
+    return df 
 
-    max_cols = max(len(parts) for parts in data)
-    columns = [f'Column_{i+1}' for i in range(max_cols)]
-    df = pd.DataFrame(data, columns=columns)
-
-    numeric_cols = ['Column_1', 'Column_2', 'Column_4', 'Column_6', 'Column_8', 'Column_10', 'Column_12', 'Column_14']
-    for col in df.columns:
-        if col in numeric_cols:
-            df[col] = pd.to_numeric(df[col], errors='ignore')
-
-    return df
-
-def plot_dataframe_as_table(df, image_path, dpi=300):
+def plot_dataframe_as_table(df, image_path, dpi=500, font_size=8, font_family='Arial', cell_pad=0.1):
     """
     Plot a DataFrame as a table and save it as an image file with increased resolution.
     Args:
         df (pandas.DataFrame): DataFrame to be plotted.
         image_path (str): Path to save the image file.
-        dpi (int): Dots per inch for the resolution of the image (default is 300).
+        dpi (int): Dots per inch for the resolution of the image (default is 500).
+        font_size (int): Font size for the table cells (default is 12).
+        font_family (str): Font family for the table cells (default is 'Arial').
+        cell_pad (float): Padding for the cells (default is 0.1).
     """
     if df.empty:
         print("DataFrame is empty. Cannot plot table.")
         return
 
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(12, 10))
     ax.axis('tight')
     ax.axis('off')
-    table = ax.table(cellText=df.values, colLabels=df.columns, loc='center')
+    
+    table = ax.table(cellText=df.values, colLabels=df.columns, loc='center', 
+                     cellLoc='center', fontsize=font_size, 
+                     colColours=['lightgray'] * len(df.columns),
+                     colWidths=[0.15] * len(df.columns))
+    
+    for (row, col), cell in table.get_celld().items():
+        if (row == 0):
+            cell.set_text_props(fontsize=font_size + 2, fontweight='bold')
+    
+    table.auto_set_font_size(False)
+    table.set_fontsize(font_size)
+    table.auto_set_column_width(col=list(range(len(df.columns))))
+    
+    table.set_fontsize(font_size)
     plt.savefig(image_path, bbox_inches='tight', pad_inches=0.1, dpi=dpi)
-    plt.show()
 
 if __name__ == "__main__":
     # File paths
@@ -84,8 +97,8 @@ if __name__ == "__main__":
 
     # Process performance file
     perf_df = create_dataframe_from_perf_file(perf_file_path)
-    plot_dataframe_as_table(perf_df, 'perf_df_to_image.png')
+    plot_dataframe_as_table(perf_df, 'outputs/perfImage.png')
 
     # Process log file
     log_df = create_dataframe_from_log_file(log_file_path)
-    plot_dataframe_as_table(log_df, 'log_df_to_image.png')
+    plot_dataframe_as_table(log_df, 'outputs/logImage.png')

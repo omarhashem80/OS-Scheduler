@@ -7,9 +7,8 @@ void clearResources(int signum)
 {
     //TODO Clears all resources in case of interruption
     msgctl(q_id, IPC_RMID, (struct msqid_ds *)0);
-    kill(0, SIGKILL);
-    destroyClk(true);
     destroyQueue(&processQueue);
+    kill(0, SIGINT);
     exit(0);
 }
 
@@ -24,7 +23,7 @@ void readInputFile(const char *filename, struct Queue *queue) {
     char line[100];
     // Read and discard the first line (header)
     fgets(line, sizeof(line), file);
-
+    //int i = 1;
     // Read process information from the file and enqueue them into the queue
     while (fgets(line, sizeof(line), file) != NULL) {
         struct Process *p = malloc(sizeof(struct Process));
@@ -32,27 +31,30 @@ void readInputFile(const char *filename, struct Queue *queue) {
             perror("Memory allocation failed");
             exit(EXIT_FAILURE);
         }
+        //i++;
         sscanf(line, "%d %d %d %d", &p->id, &p->arrival, &p->runtime, &p->priority);
         enqueue(queue, p);
     }
-
+    //printf("lines: %i\n", i);
     // Close the file
     fclose(file);
 }
+
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
 
-    for(int i=1; i< argc; i++)
-        printf("generator%s\n",argv[i]);
+    // for(int i=1; i< argc; i++)
+    //     printf("generator: %s\n",argv[i]);
 
     int algorithmNO, timeSlice = -1;  
-    int schdeulerid;  
+    int schedulerID;  
     char * path = argv[2];
+    
     // TODO Initialization
     // 1. Read the input files.
     initializeQueue(&processQueue);
-    readInputFile(path,&processQueue);
+    readInputFile(path, &processQueue);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
     algorithmNO = atoi(argv[1]);
     timeSlice = atoi(argv[3]);
@@ -71,7 +73,7 @@ int main(int argc, char * argv[])
         perror("Scheduler failed\n");
         exit(EXIT_FAILURE);
     } else{
-        schdeulerid = pid;
+        schedulerID = pid;
         pid = fork();
         if(pid==-1){
             perror("Fork failed");
@@ -87,8 +89,8 @@ int main(int argc, char * argv[])
     // 4. Use this function after creating the clock process to initialize clock
     initClk();
     // To get time use this
-    int x = getClk();
-    printf("current time is %d\n", x);
+    int time = getClk();
+    printf("current time is %d\n", time);
     // TODO Generation Main Loop
     // 5. Create a data structure for processes and provide it with its parameters.
     // 6. Send the information to the scheduler at the appropriate time.
@@ -113,9 +115,9 @@ int main(int argc, char * argv[])
         
     }
     //send singal to inform the scheduler that there is no incoming processes
-    kill(schdeulerid,SIGUSR2);
+    kill(schedulerID, SIGUSR2);
     //wait the scduler to finish
-    waitpid(schdeulerid,&x,0);
+    waitpid(schedulerID, NULL, 0);
     // 7. Clear clock resources
     destroyClk(true);
     // 8. Clear queue resources

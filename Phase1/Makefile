@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = `pkg-config --cflags --libs gtk+-3.0`
 LIBS = `pkg-config --cflags --libs gtk+-3.0`
 ${PROG}: ${PROG}.c
-		${CC} ${CFLAGS} -o ${PROG} ${PROG}.c ${LIBS}
+		${CC} ${CFLAGS} -o ${PROG}.out ${PROG}.c ${LIBS}
 
 build:
 	gcc process_generator.c -o process_generator.out
@@ -13,9 +13,11 @@ build:
 	gcc test_generator.c -o test_generator.out
 
 clean:
-	rm -f *.out  processes.txt
+	rm -f *.out  TestCases/processes.txt
 
+testcase:
+	./outs/test_generator.out
 all: clean build
 
 run:
-	./process_generator.out
+	./GUI.out

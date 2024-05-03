@@ -1,4 +1,5 @@
 #include "headers.h"
+
 int remainingTime;
 int startTime;
 int runTime;
@@ -23,14 +24,17 @@ int main(int argc, char *argv[]) {
     // Register signal handlers
     signal(SIGCONT, resume_process);
     signal(SIGTSTP, stop_process);
-     // Check if the correct number of command-line arguments is provided
-     printf("FROM PROCESS FILE :: file name %s\n",argv[0]);
-     printf("FROM PROCESS FILE :: runtime %s\n",argv[1]);
+
+    // Check if the correct number of command-line arguments is provided
+    printf("FROM PROCESS FILE :: file name %s\n",argv[0]);
+    printf("FROM PROCESS FILE :: runtime %s\n",argv[1]);
+    
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <remaining_time> <process_number>\n", argv[0]);
         return 1;
     }
-     printf("FROM PROCESS FILE :: process id:%d\n",getpid());
+
+    printf("FROM PROCESS FILE :: process id:%d\n",getpid());
     // Initialize clock
     initClk();
 

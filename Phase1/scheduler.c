@@ -53,7 +53,7 @@ void images(){
     }
     if (pid == 0) { // Child process
         // Convert algorithm option and path text to strings
-        system("python3 converter.py");
+        execlp("python3", "python3", "converter.py", NULL);
         exit(EXIT_FAILURE);
     }
 }

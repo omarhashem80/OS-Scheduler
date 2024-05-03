@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 // Global variables for widgets
 GtkWidget *timeSliceLabel;
@@ -25,11 +26,12 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
     // Hide the submit button while processing
     gtk_widget_hide(submit);
-
-    // Print the retrieved values for debugging
-    g_print("Path: %s\n", path);
-    g_print("Selected algorithm index: %d\n", algoNo);
-    g_print("Time Slice: %.1f\n", timeSliceValue);
+    //printf("Hide\n");
+    pid = 0;
+    // // Print the retrieved values for debugging
+    // g_print("Path: %s\n", path);
+    // g_print("Selected algorithm index: %d\n", algoNo);
+    // g_print("Time Slice: %.1f\n", timeSliceValue);
 
     // Fork a child process
     pid = fork();
@@ -46,16 +48,15 @@ void submit_handler(GtkWidget *widget, gpointer data) {
         snprintf(algo_arg, sizeof(algo_arg), "%i", algoNo);
         snprintf(path_arg, sizeof(path_arg), "%s", path);
         snprintf(time_slice_arg, sizeof(time_slice_arg), "%.0f", timeSliceValue);
-
         // Execute process_generator.c in the child process with arguments
         execl("./process_generator.out", "./process_generator.out", algo_arg, path_arg, time_slice_arg, NULL);
         perror("execl");
         exit(EXIT_FAILURE);
     }
-
+    printf("Parent GUI\n");
     // Wait for the child process to finish
     wait(NULL);
-    
+    pid = 0;
    // Show the submit button again after processing
     gtk_widget_show(submit);
 }
@@ -84,13 +85,16 @@ void time_slice_changed(GtkAdjustment *adjustment, gpointer user_data) {
 void destroy_handler(GtkWidget *widget, gpointer data) {
     g_print("Bye\n");
     // Terminate the child process if it's running
-    // if (pid > 0)
-    //     kill(pid, SIGKILL);
+
+    if (pid > 0)
+        kill(pid, SIGINT);
+
     // Quit GTK main loop
     gtk_main_quit();
 }
 
 int main(int argc, char *argv[]) {
+    signal(SIGINT, SIG_IGN);
     // Initialize GTK
     gtk_init(&argc, &argv);
 
