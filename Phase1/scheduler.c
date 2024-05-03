@@ -404,7 +404,7 @@ bool allocate_memory(struct Process * p){
     int min_not_allocated_index=-1;
     while (j<1024)
     {
-        bool deallcated_mem=starter_locations[i]<0&&(-starter_locations[i])>=actual_size;
+        bool deallcated_mem=starter_locations[i]<0&&(-starter_locations[i])>actual_size;
         if(deallcated_mem){
             if(min_deallocated_index==-1){
                 min_deallocated_index=i;
