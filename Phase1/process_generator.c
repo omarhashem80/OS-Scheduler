@@ -22,6 +22,7 @@ void clearResources(int signum)
     //TODO Clears all resources in case of interruption
     msgctl(q_id, IPC_RMID, (struct msqid_ds *)0);
     destroyQueue(&processQueue);
+    //TODO: clear shm
     kill(0, SIGINT);
     exit(0);
 }
