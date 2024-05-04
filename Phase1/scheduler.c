@@ -58,7 +58,7 @@ void memory_log(struct Process * p,int allocated){
     //waiting time =current time- arrival time-time taken in cpu uptil now
     char status[]="allocated";
     if(!allocated){
-        strcpy(status,"freed");
+        strcpy(status,"freeeeeed");
     }
     fprintf(memory_output_file, "At time\t%d\t%s\t%d\tbytes\tfor\tprocess\t%d\tfrom\t%d\tto\t%d\n",getClk(),status,p->max_size,p->id,p->start_address,p->end_address);
 }
@@ -115,9 +115,10 @@ void rr_start(int quantum){
         int pick_new_process=quantum;
         int next_time=getClk();
         running_process=NULL;
-        while (running_process!=NULL||!no_more_processes_to_recieve||!isEmpty(&process_queue))
+        while (running_process!=NULL||!no_more_processes_to_recieve||!isEmpty(&process_queue)||!isEmpty(&waiting_queue))
         {  
             if((next_time+1)==getClk()){
+                printf("number of waiting process:%d\n",waiting_queue.size);
                 printf("next time:%d clk:%d\n",next_time,getClk());
                 //new time unit
                 //you should update process 
@@ -146,6 +147,7 @@ void rr_start(int quantum){
                 p->max_size=message.process.max_size;
                 printf("Max size :%d\n",p->max_size);
                 strcpy(p->state,"stopped\0");
+                printf("HI/n");
                 if(allocate_memory(p)){
                     printf("success to allocate\n");
                     fork_process(p);
@@ -180,12 +182,14 @@ void rr_start(int quantum){
                         //free memory after process terminated  
                         deallocate_memory(terminated_process->start_address);
                         memory_log(running_process,0);
+                        
                         //use the freed memory of the terminated process
-
-                        while (!isEmpty(&waiting_queue))
+                        bool has_mem=true;
+                        while (has_mem&&!isEmpty(&waiting_queue))
                         {
                             struct Process * p=peek(&waiting_queue);
-                            if(allocate_memory(p)){
+                            has_mem=allocate_memory(p);
+                            if(has_mem){
                                 fork_process(p);
                                 enqueue(&process_queue,p);
                                 dequeue(&waiting_queue);
@@ -381,6 +385,7 @@ Phase2
 void deallocate_memory(int i){
     starter_locations[i]=-starter_locations[i];
     //call allocate new process after that 
+    printf("Memory at location:%d is deallocated\n",i);
 
 }
 void print_memory(){
@@ -398,13 +403,13 @@ bool allocate_memory(struct Process * p){
     int actual_size=pow(2,x);
     //printf("Actual Size is%d: vs Reserved Size%d from:%d to %d",p->max_size,actual_size);
     int i=0;
-    int j=i+actual_size-1;
     bool found=false;
     int min_deallocated_index=-1;
     int min_not_allocated_index=-1;
-    while (j<1024)
+    printf("HI/n");
+     while (i<1024)
     {
-        bool deallcated_mem=starter_locations[i]<0&&(-starter_locations[i])>actual_size;
+        bool deallcated_mem=starter_locations[i]<0&&(-starter_locations[i])>=actual_size;
         if(deallcated_mem){
             if(min_deallocated_index==-1){
                 min_deallocated_index=i;
@@ -412,40 +417,46 @@ bool allocate_memory(struct Process * p){
             if(starter_locations[min_deallocated_index]<starter_locations[i]){
                 min_deallocated_index=i;
             }
-            printf("deallocated memory at location i:%d=%d\n",i,starter_locations[i]);
+           // printf("deallocated memory at location i:%d=%d\n",i,starter_locations[i]);
         }
-        if(!found){
-            if(starter_locations[i]==0){
-            found=true;
-            min_not_allocated_index=i;
-            }else{
-                i=(int)fmax(j+1,i+starter_locations[i]);
-            }
-        }else
-            i=j+1;
-
+        if(abs(starter_locations[i])>0){
+            i=i+abs(starter_locations[i]);
+        }
+        while(starter_locations[i]>=0) i++;
+    }
+    i=0;
+    int j=i+actual_size-1;
+    while (j<1024)
+    {
+        if(starter_locations[i]==0){
+        printf("there is memoy not deallocated\n");
+        min_not_allocated_index=i;
+        break;
+        }else{
+            printf("there is no memory at location%d and its value%d",i,starter_locations[i]);
+            i=(int)fmax(j+1,i+abs(starter_locations[i]));
+        }
+        
         j=i+actual_size-1;
     }
-    if(found){
-        printf("%d and its size:",min_deallocated_index);
-        printf("%d not deallocated",starter_locations[min_not_allocated_index]+actual_size);
-        if(min_deallocated_index!=-1&&((-(starter_locations[min_deallocated_index]))<=(starter_locations[min_not_allocated_index]+actual_size)))
+    if(min_deallocated_index!=-1||min_not_allocated_index!=-1){
+        printf("%d and its size:\n",min_deallocated_index);
+        printf("%d not deallocated",min_not_allocated_index);
+        if(min_not_allocated_index==-1&&min_deallocated_index!=-1||min_deallocated_index!=-1&&min_not_allocated_index!=-1&&((-(starter_locations[min_deallocated_index]))<=(starter_locations[min_not_allocated_index]+actual_size)))
         {
         printf("%d\n",starter_locations[min_deallocated_index]);
             //deallocated mem is smaller than the next availabe index
-            
             int last_index=min_deallocated_index-starter_locations[min_deallocated_index];
             j=min_deallocated_index+actual_size;
             starter_locations[min_deallocated_index]=actual_size;
+            p->start_address=min_deallocated_index;
+            p->end_address=min_deallocated_index+actual_size-1;
             while (j<last_index)
             {
                 starter_locations[j]=-actual_size;
                 j+=actual_size;
                 actual_size*=2;
             }
-            p->start_address=min_deallocated_index;
-            p->end_address=min_deallocated_index+actual_size-1;
-
         }else{
             starter_locations[min_not_allocated_index]=actual_size;
             p->start_address=min_not_allocated_index;
