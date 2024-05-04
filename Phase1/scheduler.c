@@ -53,7 +53,7 @@ void images(){
     }
     if (pid == 0) { // Child process
         // Convert algorithm option and path text to strings
-        signal(SIGINT, SIG_IGN);
+       // signal(SIGINT, SIG_IGN);
         execlp("python3", "python3", "converter.py", NULL);
         exit(EXIT_FAILURE);
     }
@@ -95,12 +95,12 @@ int main(int argc, char *argv[]) {
 
     images();
     sleep(5);
-    destroyClk(false);
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n\t\t\tscheduer finished\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
+    destroyClk(false);
     return 0;
 }
 void process_terminated(int signum){
