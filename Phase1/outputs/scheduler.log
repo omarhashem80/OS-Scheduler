@@ -1,0 +1,16 @@
+At time	1	process	1	started	arrive	1	total	12	remain	12	wait	0
+At time	13	process	1	finish	arrive	1	total	12	remain	0	wait	0	TA	12	WTA	1.00
+At time	13	process	2	started	arrive	2	total	8	remain	8	wait	11
+At time	21	process	2	finish	arrive	2	total	8	remain	0	wait	11	TA	19	WTA	2.38
+At time	21	process	3	started	arrive	12	total	9	remain	9	wait	9
+At time	30	process	3	finish	arrive	12	total	9	remain	0	wait	9	TA	18	WTA	2.00
+At time	30	process	4	started	arrive	15	total	5	remain	5	wait	15
+At time	35	process	4	finish	arrive	15	total	5	remain	0	wait	15	TA	20	WTA	4.00
+At time	35	process	5	started	arrive	18	total	8	remain	8	wait	17
+At time	43	process	5	finish	arrive	18	total	8	remain	0	wait	17	TA	25	WTA	3.12
+At time	43	process	6	started	arrive	22	total	10	remain	10	wait	21
+At time	53	process	6	finish	arrive	22	total	10	remain	0	wait	21	TA	31	WTA	3.10
+At time	53	process	7	started	arrive	25	total	6	remain	6	wait	28
+At time	59	process	7	finish	arrive	25	total	6	remain	0	wait	28	TA	34	WTA	5.67
+At time	59	process	8	started	arrive	26	total	3	remain	3	wait	33
+At time	62	process	8	finish	arrive	26	total	3	remain	0	wait	33	TA	36	WTA	12.00

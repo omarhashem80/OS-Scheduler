@@ -56,7 +56,7 @@ void images(){
     }
     if (pid == 0) { // Child process
         // Convert algorithm option and path text to strings
-       // signal(SIGINT, SIG_IGN);
+        signal(SIGINT, SIG_IGN);
         execlp("python3", "python3", "converter.py", NULL);
         exit(EXIT_FAILURE);
     }

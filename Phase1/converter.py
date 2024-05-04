@@ -100,16 +100,17 @@ def plot_dataframe_as_table(df, image_path, dpi=500, font_size=8, font_family='A
 if __name__ == "__main__":
     try:
         # File paths
-        perf_file_path = 'outputs/scheduler.perf'
         log_file_path = 'outputs/scheduler.log'
-
-        # Process performance file
-        perf_df = create_dataframe_from_perf_file(perf_file_path)
-        plot_dataframe_as_table(perf_df, 'outputs/perfImage.png')
+        perf_file_path = 'outputs/scheduler.perf'
 
         # Process log file
         log_df = create_dataframe_from_log_file(log_file_path)
         plot_dataframe_as_table(log_df, 'outputs/logImage.png')
+        
+        # Process performance file
+        perf_df = create_dataframe_from_perf_file(perf_file_path)
+        plot_dataframe_as_table(perf_df, 'outputs/perfImage.png')
+
     except KeyboardInterrupt:
         print("Execution interrupted by the user.")
 
