@@ -264,8 +264,93 @@ void destroyClk(bool terminateAll)
         killpg(getpgrp(), SIGINT);
     }
 }
+//ali--------------------------------------------------------------------------------------
 
+struct PriorityQueue_Ali {
+    struct Node **heap;
+    int capacity;
+    int size;
+};
 
+struct PriorityQueue_Ali* createPriorityQueue(int capacity) {
+    struct PriorityQueue_Ali *pq_Ali = (struct PriorityQueue_Ali*)malloc(sizeof(struct PriorityQueue_Ali));
+    pq_Ali->capacity = capacity;
+    pq_Ali->size = 0;
+    pq_Ali->heap = (struct Node**)malloc(capacity * sizeof(struct Node*));
+    return pq_Ali;
+}
+
+void swap(struct Node **a, struct Node **b) {
+    struct Node *temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void heapify(struct PriorityQueue_Ali *pq_Ali, int idx) {
+    int smallest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < pq_Ali->size && pq_Ali->heap[left]->data->remaining_time < pq_Ali->heap[smallest]->data->remaining_time)
+        smallest = left;
+
+    if (right < pq_Ali->size && pq_Ali->heap[right]->data->remaining_time < pq_Ali->heap[smallest]->data->remaining_time)
+        smallest = right;
+
+    if (smallest != idx) {
+        swap(&pq_Ali->heap[idx], &pq_Ali->heap[smallest]);
+        heapify(pq_Ali, smallest);
+    }
+}
+
+void insert(struct PriorityQueue_Ali *pq_Ali, struct Process* p) {
+    if (pq_Ali->size == pq_Ali->capacity) {
+        printf("Priority queue is full.\n");
+        return;
+    }
+    int i = pq_Ali->size;
+    pq_Ali->size++;
+    pq_Ali->heap[i] = (struct Node*)malloc(sizeof(struct Node));
+    pq_Ali->heap[i]->data = p;
+
+    while (i != 0 && pq_Ali->heap[(i - 1) / 2]->data->remaining_time > pq_Ali->heap[i]->data->remaining_time) {
+        swap(&pq_Ali->heap[i], &pq_Ali->heap[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+struct Node* extractMin(struct PriorityQueue_Ali *pq_Ali) {
+    if (pq_Ali->size <= 0) {
+        return NULL;
+    }
+
+    if (pq_Ali->size == 1) {
+        pq_Ali->size--;
+        return pq_Ali->heap[0];
+    }
+
+    struct Node* root = pq_Ali->heap[0];
+    pq_Ali->heap[0] = pq_Ali->heap[pq_Ali->size - 1];
+    pq_Ali->size--;
+    heapify(pq_Ali, 0);
+    return root;
+}
+
+int isEmpty_Ali(struct PriorityQueue_Ali *pq_Ali) {
+    return pq_Ali->size == 0;
+}
+
+void freeMemory_Ali(struct PriorityQueue_Ali *pq_Ali) {
+    // Free memory allocated to the nodes in the priority queue
+    for (int i = 0; i < pq_Ali->size; i++) {
+        free(pq_Ali->heap[i]->data);
+        free(pq_Ali->heap[i]);
+    }
+
+    // Free memory allocated to the heap array and the priority queue itself
+    free(pq_Ali->heap);
+    free(pq_Ali);
+}
 // -----------------------------------------------------------------------------------------
 
 
@@ -273,6 +358,7 @@ struct PNode {
     struct Process* P;
     int pr;
 };
+
 struct PriorityQueue {
     struct PNode** A;
     int heap_size;
@@ -306,7 +392,7 @@ void MIN_HEAPIFY(struct PriorityQueue* pq, int i) {
     int l = left(i);
     int r = right(i);
     int smallest = i;
-    if (l <= pq->heap_size && pq->A[l]->pr < pq->A[i]->pr)
+    if (l <= pq->heap_size && pq->A[l]->pr < pq->A[smallest]->pr)
         smallest = l;
     if (r <= pq->heap_size && pq->A[r]->pr < pq->A[smallest]->pr)
         smallest = r;
@@ -318,7 +404,12 @@ void MIN_HEAPIFY(struct PriorityQueue* pq, int i) {
     }
 }
 
-
+void print(struct PriorityQueue* pq){
+    for (int i = 0; i < pq->heap_size; i++) {
+        printf("id: %d  rt: %d", pq->A[i]->P->id, pq->A[i]->P->remaining_time);
+    }
+    printf("\n");
+}
 // Function to decrease key of a node in MinHeap
 void DECREASE_KEY(struct PriorityQueue* pq, int i, int k) {
     if (k > pq->A[i]->pr) {
@@ -333,6 +424,7 @@ void DECREASE_KEY(struct PriorityQueue* pq, int i, int k) {
         i = parent(i);
     }
 }
+
 
 void Insert(struct PriorityQueue* pq, struct Process* p) {
     struct PNode* pnode = (struct PNode*)malloc(sizeof(struct PNode)); // Allocate memory for pnode

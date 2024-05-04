@@ -27,5 +27,5 @@ testcase:
 all: clean build ${PROG_GUI} ${PROG_PROCESS_GENERATOR}
 
 run:
-	./${PROG_GUI}.out &
+	./${PROG_GUI}.out
 	

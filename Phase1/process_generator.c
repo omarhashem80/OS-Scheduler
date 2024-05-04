@@ -74,7 +74,7 @@ int main(int argc, char * argv[])
         perror("Fork failed");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        printf("child1 to scheduler\n");
+        //printf("child1 to scheduler\n");
         char algorithmArg[16], timeSliceArg[16]; // Assuming algorithmNO and timeSlice won't exceed 15 digits
         sprintf(algorithmArg, "%d", algorithmNO);
         sprintf(timeSliceArg, "%d", timeSlice);
@@ -100,7 +100,7 @@ int main(int argc, char * argv[])
     initClk();
     // To get time use this
     int time = getClk();
-    printf("current time is %d\n", time);
+    //printf("current time is %d\n", time);
     // TODO Generation Main Loop
     // 5. Create a data structure for processes and provide it with its parameters.
     // 6. Send the information to the scheduler at the appropriate time.
@@ -128,7 +128,7 @@ int main(int argc, char * argv[])
     kill(schedulerID, SIGUSR2);
     //wait the scduler to finish
     waitpid(schedulerID, NULL, 0);
-    printf("sbye\n");
+    //printf("sbye\n");
     // 7. Clear queue resources
     destroyQueue(&processQueue);
     key_t key = 50;  // Generate a key for the shared memory segment

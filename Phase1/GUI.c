@@ -55,26 +55,6 @@ void combo_box_changed(GtkComboBox *combo_box, gpointer user_data) {
 }
 
 
-void images(){
-    
-    GError *error = NULL;
-    gchar *argv[] = { "python3", "converter.py", NULL };
-
-    // Spawn the Python script asynchronously
-    gboolean success = g_spawn_async(NULL,       // working_directory
-                                     argv,      // argv
-                                     NULL,      // envp
-                                     G_SPAWN_SEARCH_PATH, // flags
-                                     NULL,      // child_setup
-                                     NULL,      // user_data
-                                     NULL,      // child_pid
-                                     &error);   // error
-    if (!success) {
-        g_printerr("Error spawning Python script: %s\n", error->message);
-        g_error_free(error);
-        exit(EXIT_FAILURE);
-    }
-}
 
 gboolean showButton(gpointer data) {
     
@@ -88,7 +68,7 @@ gboolean showButton(gpointer data) {
 // Function to handle the change in the time slice value
 void time_slice_changed(GtkAdjustment *adjustment, gpointer user_data) {
     gdouble value = gtk_adjustment_get_value(adjustment);
-    g_print("Time Slice: %.1f\n", value);
+    //g_print("Time Slice: %.1f\n", value);
 }
 
 // Function to handle the submit button click event
