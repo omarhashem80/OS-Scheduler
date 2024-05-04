@@ -21,15 +21,25 @@ GtkWidget *pathLabel;
 GtkWidget *fixed;
 pid_t pid;
 int shmid;
+void *shmaddr;
 
 char* reader() {
-    void *shmaddr = shmat(shmid, NULL, 0);
+    shmaddr = shmat(shmid, NULL, 0);
     if (shmaddr == (void *)-1) {
         perror("Error in attach in reader");
         exit(EXIT_FAILURE);
     }
+    printf("\nGUI: Shared memory attached at address %p\n", shmaddr);
     return (char *)shmaddr;
 
+}
+void writer() {
+    shmaddr = shmat(shmid, NULL, 0);
+    if (shmaddr == (void *)-1) {
+        perror("Error in attach in writer");
+        exit(EXIT_FAILURE);
+    }
+    strcpy((char *)shmaddr, "0"); 
 }
 
 // Function to handle the change in the algorithm selection
@@ -46,76 +56,25 @@ void combo_box_changed(GtkComboBox *combo_box, gpointer user_data) {
     }
 }
 
-// void begin() {
-//     // Open the file for writing
-//     FILE *file = fopen(FILENAME, "w");
-//     if (file == NULL) {
-//         perror("Error opening file");
-//         return;
-//     }
-
-//     // Write data to the file
-//     char data[] = "0";
-//     fprintf(file, "%s", data);
-//     // Close the file
-//     fclose(file);
-// }
-void images(){
-    
-    GError *error = NULL;
-    gchar *argv[] = { "python3", "converter.py", NULL };
-
-    // Spawn the Python script asynchronously
-    gboolean success = g_spawn_async(NULL,       // working_directory
-                                     argv,      // argv
-                                     NULL,      // envp
-                                     G_SPAWN_SEARCH_PATH, // flags
-                                     NULL,      // child_setup
-                                     NULL,      // user_data
-                                     NULL,      // child_pid
-                                     &error);   // error
-    if (!success) {
-        g_printerr("Error spawning Python script: %s\n", error->message);
-        g_error_free(error);
-        exit(EXIT_FAILURE);
-    }
-}
 
 gboolean showButton(gpointer data) {
-    
-    if(reader()[0] == '1'){
-        //images();
+    char buttonData = reader()[0];
+    if(buttonData == '1'){
+        printf("%c\n", buttonData); // Print character using %c
         gtk_widget_set_sensitive(submit, TRUE);
+        void *shmaddr = shmat(shmid, NULL, 0);
+        if (shmaddr == (void *)-1) {
+            perror("Error in attach in writer");
+            exit(EXIT_FAILURE);
+        }
+        shmdt(shmaddr);
+        shmctl(shmid, IPC_RMID, (struct shmid_ds *)0);
     }
         
     // Return TRUE to keep the timeout function running
     return TRUE;
 }
 
-// gboolean showButton(gpointer data) {
-//     // Open the file for reading
-//     FILE *file = fopen(FILENAME, "r");
-//     if (file == NULL) {
-//         perror("Error opening file");
-//         return TRUE;
-//     }
-
-//     // Read data from the file
-//     char result[100];
-//     if (fgets(result, sizeof(result), file) != NULL) {
-//         // Update the label text
-//         if(result[0]=='1'){
-//             gtk_widget_set_sensitive(submit, TRUE);
-//             images();
-//         }
-//     }
-
-//     // Close the file
-//     fclose(file);
-    
-//     // Return TRUE to keep the timeout function running
-//     return TRUE;
-// }
 
 // Function to handle the change in the time slice value
 void time_slice_changed(GtkAdjustment *adjustment, gpointer user_data) {
@@ -129,9 +88,10 @@ void submit_handler(GtkWidget *widget, gpointer data) {
     const gchar *path = gtk_entry_get_text(GTK_ENTRY(pathEntry));
     gint algoNo = gtk_combo_box_get_active(GTK_COMBO_BOX(comboBox));
     gdouble timeSliceValue = gtk_range_get_value(GTK_RANGE(timeSliceSlider));
-    //begin();
+    
     // Hide the submit button while processing
-    //images();
+
+    writer();
     gtk_widget_set_sensitive(submit, FALSE);
 
     // Convert algorithm option and path text to strings
@@ -161,33 +121,35 @@ void submit_handler(GtkWidget *widget, gpointer data) {
 
 // Function to handle window destruction
 void destroy_handler(GtkWidget *widget, gpointer data) {
-    g_print("Bye\n");
     // Terminate the child process if it's running
 
-    void *shmaddr = shmat(shmid, NULL, 0);
+    shmaddr = shmat(shmid, NULL, 0);
     if (shmaddr == (void *)-1) {
         perror("Error in attach in writer");
         exit(EXIT_FAILURE);
     }
-    shmdt(shmaddr);
+    //shmdt(shmaddr);
     shmctl(shmid, IPC_RMID, (struct shmid_ds *)0);
     if (pid > 0)
         kill(pid, SIGINT);
     // Quit GTK main loop
     gtk_main_quit();
+    exit(0);
 }
 
 int main(int argc, char *argv[]) {
+
     signal(SIGINT, SIG_IGN);
     
     key_t key = 50;  // Generate a key for the shared memory segment
-    shmid = shmget(key, 4096, IPC_CREAT | 0666);
+
+    shmid = shmget(key, SHM_SIZE, IPC_CREAT | 0666);
     // Create a shared memory segment
     if (shmid < 0 ){
         perror("shmget");
         exit(EXIT_FAILURE);
     }
-
+    printf("Shared memory created with id %d\n", shmid);
     // Initialize GTK
     gtk_init(&argc, &argv);
 
@@ -252,7 +214,7 @@ int main(int argc, char *argv[]) {
     // Connect signal for window destruction
     g_signal_connect(window, "destroy", G_CALLBACK(destroy_handler), NULL);
 
-    g_timeout_add(100, showButton, submit);
+    g_timeout_add(1000, showButton, submit);
 
     // Show all widgets and start GTK main loop
     gtk_widget_show_all(window);

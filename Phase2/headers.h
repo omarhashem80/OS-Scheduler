@@ -17,16 +17,21 @@
 #define false 0
 
 #define SHKEY 300
+#define MAXSIZE 1000
 
 //***********************************************************************************//
 // Define a structure for the process
 struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
+    float WTA;
+    char state[20];
+    /*
     enum {
         RUNNING,
         TERMINATED,
         WAITING
-    } state;
+    } state
+    */
 };
 
 // Define a structure for the node in the queue
@@ -42,6 +47,91 @@ struct Queue {
     int size;
 };
 
+// struct PriorityQueue_Ali {
+//     struct Node **heap;
+//     int capacity;
+//     int size;
+// };
+
+// struct PriorityQueue_Ali* createPriorityQueue(int capacity) {
+//     struct PriorityQueue_Ali *pq_Ali = (struct PriorityQueue_Ali*)malloc(sizeof(struct PriorityQueue_Ali));
+//     pq_Ali->capacity = capacity;
+//     pq_Ali->size = 0;
+//     pq_Ali->heap = (struct Node**)malloc(capacity * sizeof(struct Node*));
+//     return pq_Ali;
+// }
+
+// void swap(struct Node **a, struct Node **b) {
+//     struct Node *temp = *a;
+//     *a = *b;
+//     *b = temp;
+// }
+
+// void heapify(struct PriorityQueue_Ali *pq_Ali, int idx) {
+//     int smallest = idx;
+//     int left = 2 * idx + 1;
+//     int right = 2 * idx + 2;
+
+//     if (left < pq_Ali->size && pq_Ali->heap[left]->data->remaining_time < pq_Ali->heap[smallest]->data->remaining_time)
+//         smallest = left;
+
+//     if (right < pq_Ali->size && pq_Ali->heap[right]->data->remaining_time < pq_Ali->heap[smallest]->data->remaining_time)
+//         smallest = right;
+
+//     if (smallest != idx) {
+//         swap(&pq_Ali->heap[idx], &pq_Ali->heap[smallest]);
+//         heapify(pq_Ali, smallest);
+//     }
+// }
+
+// void insert(struct PriorityQueue_Ali *pq_Ali, struct Process* p) {
+//     if (pq_Ali->size == pq_Ali->capacity) {
+//         printf("Priority queue is full.\n");
+//         return;
+//     }
+//     int i = pq_Ali->size;
+//     pq_Ali->size++;
+//     pq_Ali->heap[i] = (struct Node*)malloc(sizeof(struct Node));
+//     pq_Ali->heap[i]->data = p;
+
+//     while (i != 0 && pq_Ali->heap[(i - 1) / 2]->data->remaining_time > pq_Ali->heap[i]->data->remaining_time) {
+//         swap(&pq_Ali->heap[i], &pq_Ali->heap[(i - 1) / 2]);
+//         i = (i - 1) / 2;
+//     }
+// }
+
+// struct Node* extractMin(struct PriorityQueue_Ali *pq_Ali) {
+//     if (pq_Ali->size <= 0) {
+//         return NULL;
+//     }
+
+//     if (pq_Ali->size == 1) {
+//         pq_Ali->size--;
+//         return pq_Ali->heap[0];
+//     }
+
+//     struct Node* root = pq_Ali->heap[0];
+//     pq_Ali->heap[0] = pq_Ali->heap[pq_Ali->size - 1];
+//     pq_Ali->size--;
+//     heapify(pq_Ali, 0);
+//     return root;
+// }
+
+// int isEmpty_Ali(struct PriorityQueue_Ali *pq_Ali) {
+//     return pq_Ali->size == 0;
+// }
+
+// void freeMemory_Ali(struct PriorityQueue_Ali *pq_Ali) {
+//     // Free memory allocated to the nodes in the priority queue
+//     for (int i = 0; i < pq_Ali->size; i++) {
+//         free(pq_Ali->heap[i]->data);
+//         free(pq_Ali->heap[i]);
+//     }
+
+//     // Free memory allocated to the heap array and the priority queue itself
+//     free(pq_Ali->heap);
+//     free(pq_Ali);
+// }
 // Function to initialize the queue
 void initializeQueue(struct Queue *queue) {
     queue->front = NULL;
@@ -67,6 +157,7 @@ void enqueue(struct Queue *queue, struct Process *p) {
         queue->rear = newNode;
     }
     queue->size++;
+    
 }
 
 // Function to dequeue a process
@@ -123,7 +214,7 @@ void destroyQueue(struct Queue *queue) {
 struct msgbuff
 {
 	long mtype;
-	struct Process* process;
+	struct Process process;
 };
 
 ///==============================
@@ -172,4 +263,107 @@ void destroyClk(bool terminateAll)
     {
         killpg(getpgrp(), SIGINT);
     }
+}
+
+
+// -----------------------------------------------------------------------------------------
+
+struct PNode {
+    struct Process* P;
+    int pr;
+};
+struct PriorityQueue {
+    struct PNode** A;
+    int heap_size;
+};
+
+// Function to initialize a priority queue
+void InitPriorityQueue(struct PriorityQueue* pq) {
+    pq->A = (struct PNode**)malloc((MAXSIZE + 1) * sizeof(struct PNode*));
+    for (int i = 0; i <= MAXSIZE; i++) {
+        pq->A[i] = (struct PNode*)malloc(sizeof(struct PNode));
+    }
+    pq->heap_size = 0;
+}
+
+
+// Utility functions for heap operations
+int left(int i) {
+    return 2 * i;
+}
+
+int right(int i) {
+    return 2 * i + 1;
+}
+
+int parent(int i) {
+    return i / 2;
+}
+
+// Function to maintain MinHeap property
+void MIN_HEAPIFY(struct PriorityQueue* pq, int i) {
+    int l = left(i);
+    int r = right(i);
+    int smallest = i;
+    if (l <= pq->heap_size && pq->A[l]->pr < pq->A[i]->pr)
+        smallest = l;
+    if (r <= pq->heap_size && pq->A[r]->pr < pq->A[smallest]->pr)
+        smallest = r;
+    if (smallest != i) {
+        struct PNode* temp = pq->A[i];
+        pq->A[i] = pq->A[smallest];
+        pq->A[smallest] = temp;
+        MIN_HEAPIFY(pq, smallest);
+    }
+}
+
+
+// Function to decrease key of a node in MinHeap
+void DECREASE_KEY(struct PriorityQueue* pq, int i, int k) {
+    if (k > pq->A[i]->pr) {
+        printf("Error: New key is greater than current key\n");
+        return;
+    }
+    pq->A[i]->pr = k;
+    while (i > 1 && pq->A[parent(i)]->pr > pq->A[i]->pr) {
+        struct PNode* temp = pq->A[i];
+        pq->A[i] = pq->A[parent(i)];
+        pq->A[parent(i)] = temp;
+        i = parent(i);
+    }
+}
+
+void Insert(struct PriorityQueue* pq, struct Process* p) {
+    struct PNode* pnode = (struct PNode*)malloc(sizeof(struct PNode)); // Allocate memory for pnode
+    if (pnode == NULL) {
+        printf("Error: Memory allocation failed\n");
+        return;
+    }
+    pnode->P = p;
+    pnode->pr = p->priority;
+    pq->heap_size++;
+    pq->A[pq->heap_size] = pnode;
+    DECREASE_KEY(pq, pq->heap_size, pnode->pr);
+}
+
+struct Process* Extract_Min(struct PriorityQueue* pq) {
+    if (pq->heap_size < 1) {
+        printf("Error: Heap underflow\n");
+    }
+    struct PNode* MIN = pq->A[1];
+    pq->A[1] = pq->A[pq->heap_size];
+    pq->A[pq->heap_size] = MIN;
+    pq->heap_size--;
+    MIN_HEAPIFY(pq, 1);
+    return MIN->P;
+}
+bool IsEmpty(struct PriorityQueue* pq) {
+    return pq->heap_size == 0;
+}
+void DestroyPriorityQueue(struct PriorityQueue* pq) {
+    for(int i=0;i<pq->heap_size;i++) {
+        free(pq->A[i]->P);
+        free(pq->A[i]);
+    }
+    free(pq);
 }
