@@ -145,10 +145,11 @@ void rr_start(int quantum){
                 p->id=message.process.id;
                 p->remaining_time=message.process.runtime;
                 p->max_size=message.process.max_size;
+                printf("HI/n");
                 printf("Max size :%d\n",p->max_size);
                 strcpy(p->state,"stopped\0");
-                printf("HI/n");
                 if(allocate_memory(p)){
+                printf("H\n");
                     printf("success to allocate\n");
                     fork_process(p);
                     enqueue(&process_queue, p);
@@ -386,7 +387,31 @@ void deallocate_memory(int i){
     starter_locations[i]=-starter_locations[i];
     //call allocate new process after that 
     printf("Memory at location:%d is deallocated\n",i);
-
+    while (true)
+    {
+       //with next equall place 
+        if((i-starter_locations[i])<1024&&starter_locations[i-starter_locations[i]]==starter_locations[i]){
+        //if two equall sizes (negatives) 
+        int s=-2* starter_locations[i];
+        //  get the summation==s
+        if(i%s==0){
+            //if the start location of both of them %s ==0 then concat them 
+            starter_locations[i]=-s;
+            }
+        //with previous 
+        }
+        else if((i+starter_locations[i])>=0&&starter_locations[i+starter_locations[i]]==starter_locations[i]){
+            int s=-2* starter_locations[i];
+            if((i+starter_locations[i])%s==0){
+            //if the start location of both of them %s ==0 then concat them 
+                starter_locations[(i+starter_locations[i])]=-s;
+            }
+            i=i+starter_locations[i];
+        }else 
+            return;   
+    }
+    
+    
 }
 void print_memory(){
     for (int i = 0; i < 1024; i++)
