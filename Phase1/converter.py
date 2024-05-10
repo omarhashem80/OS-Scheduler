@@ -29,6 +29,7 @@ def create_dataframe_from_perf_file(file_path):
     df['Value'] = pd.to_numeric(df['Value'], errors='ignore')
     return df
 
+
 def create_dataframe_from_log_file(file_path):
     """
     Create a DataFrame from a log text file.
@@ -58,6 +59,33 @@ def create_dataframe_from_log_file(file_path):
         data['TA'].append(TA)
         WTA = parts[parts.index('WTA') + 1] if 'WTA' in parts else None
         data['WTA'].append(WTA)
+    df = pd.DataFrame(data)
+    return df 
+
+def create_dataframe_from_memo_df(file_path):
+    """
+    Create a DataFrame from a log text file.
+    Args:
+        file_path (str): Path to the log text file.
+    Returns:
+        pandas.DataFrame: DataFrame created from the text file.
+    """
+   
+    data = {'At time':[], 'process' : [], 'status' : [], 'size' : [], 'from' : [], 'to' : []}
+    
+    lines = read_text_file(file_path)
+
+    if not lines:
+        return pd.DataFrame()
+    
+    for line in lines:
+        parts = line.strip().split('\t')
+        data['At time'].append(parts[parts.index('At time') + 1])
+        data['status'].append(parts[parts.index('At time') + 2])
+        data['size'].append(parts[parts.index('At time') + 3])
+        data['process'].append(parts[parts.index('process') + 1])
+        data['from'].append(parts[parts.index('from') + 1])
+        data['to'].append(parts[parts.index('to') + 1])
     df = pd.DataFrame(data)
     return df 
 
@@ -95,13 +123,14 @@ def plot_dataframe_as_table(df, image_path, dpi=500, font_size=8, font_family='A
     
     table.set_fontsize(font_size)
     plt.savefig(image_path, bbox_inches='tight', pad_inches=0.1, dpi=dpi)
-    #plt.show();
 
 if __name__ == "__main__":
     try:
         # File paths
         log_file_path = 'outputs/scheduler.log'
         perf_file_path = 'outputs/scheduler.perf'
+        memo_file_path = 'outputs/memory.log'
+        
 
         # Process log file
         log_df = create_dataframe_from_log_file(log_file_path)
@@ -110,7 +139,10 @@ if __name__ == "__main__":
         # Process performance file
         perf_df = create_dataframe_from_perf_file(perf_file_path)
         plot_dataframe_as_table(perf_df, 'outputs/perfImage.png')
+        
+        # Process memory log file
+        memo_df = create_dataframe_from_memo_df(memo_file_path)
+        plot_dataframe_as_table(memo_df, 'outputs/memo_log.png')
 
     except KeyboardInterrupt:
         print("Execution interrupted by the user.")
-

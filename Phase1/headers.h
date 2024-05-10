@@ -25,13 +25,7 @@ struct Process {
     int id, arrival, runtime, priority,actual_id,remaining_time,waiting_time,turnaround_time;
     float WTA;
     char state[20];
-    /*
-    enum {
-        RUNNING,
-        TERMINATED,
-        WAITING
-    } state
-    */
+    int end_address,start_address,max_size;
 };
 
 // Define a structure for the node in the queue
@@ -222,7 +216,13 @@ struct msgbuff
 int * shmaddr;                 //
 //===============================
 
-
+/*
+void pushPQ(struct Queue *priority_queue, struct Process *p,bool is_waiting_queue)  
+{
+if(is_waiting_queue){
+        p->priority= -(p->remaining_time);
+    }
+*/
 
 int getClk()
 {
@@ -303,18 +303,18 @@ void heapify(struct PriorityQueue_Ali *pq_Ali, int idx) {
     }
 }
 
-void insert(struct PriorityQueue_Ali *pq_Ali, struct Process* p) {
-    if (pq_Ali->size == pq_Ali->capacity) {
+void insert(struct PriorityQueue_Ali *pq, struct Process* p) {
+    if (pq->size == pq->capacity) {
         printf("Priority queue is full.\n");
         return;
     }
-    int i = pq_Ali->size;
-    pq_Ali->size++;
-    pq_Ali->heap[i] = (struct Node*)malloc(sizeof(struct Node));
-    pq_Ali->heap[i]->data = p;
+    int i = pq->size;
+    pq->size++;
+    pq->heap[i] = (struct Node*)malloc(sizeof(struct Node));
+    pq->heap[i]->data = p;
 
-    while (i != 0 && pq_Ali->heap[(i - 1) / 2]->data->remaining_time > pq_Ali->heap[i]->data->remaining_time) {
-        swap(&pq_Ali->heap[i], &pq_Ali->heap[(i - 1) / 2]);
+    while (i != 0 && pq->heap[(i - 1) / 2]->data->remaining_time > pq->heap[i]->data->remaining_time) {
+        swap(&pq->heap[i], &pq->heap[(i - 1) / 2]);
         i = (i - 1) / 2;
     }
 }

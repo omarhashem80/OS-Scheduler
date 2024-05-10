@@ -55,8 +55,6 @@ int main(int argc, char *argv[]) {
     // Cleanup
     destroyClk(false);
     // Notify parent process
-    printf("BEFORE SENDING KILL SINGAL\n");
     kill(getppid(), SIGUSR1); 
     exit(processNo);
 }
-

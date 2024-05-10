@@ -43,7 +43,7 @@ void readInputFile(const char *filename, struct Queue *queue) {
             exit(EXIT_FAILURE);
         }
         //i++;
-        sscanf(line, "%d %d %d %d", &p->id, &p->arrival, &p->runtime, &p->priority);
+        sscanf(line, "%d %d %d %d %d", &p->id, &p->arrival, &p->runtime, &p->priority, &p->max_size);
         enqueue(queue, p);
     }
     // Close the file
