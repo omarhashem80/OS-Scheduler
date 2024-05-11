@@ -464,19 +464,21 @@ void print_memory(){
 
         }
     }
-    
+    fprintf(memory_output_file, "\n\n\n\n\n\n");
 }
 bool allocate_memory(struct Process * p){
     int x=ceil(log2(p->max_size));
     int actual_size=pow(2,x);
-    //printf("Actual Size is%d: vs Reserved Size%d from:%d to %d",p->max_size,actual_size);
+   // printf("Actual Size is%d: vs Reserved Size%d from:%d to %d",p->max_size,actual_size);
     int i=0;
     bool found=false;
     int min_deallocated_index=-1;
     int min_not_allocated_index=-1;
     printf("HI\n");
-     while (i<1024)
+   // print_memory();
+    while (i < 1024)
     {
+
         bool deallcated_mem=starter_locations[i]<0&&(-starter_locations[i])>=actual_size;
         if(deallcated_mem){
             if(min_deallocated_index==-1){

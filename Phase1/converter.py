@@ -21,9 +21,11 @@ def create_dataframe_from_perf_file(file_path):
     Returns:
         pandas.DataFrame: DataFrame created from the text file.
     """
-    lines = read_text_file(file_path)
-    if not lines:
-        return None
+    lines = []
+
+    while not lines:
+        lines = read_text_file(file_path)
+
     data = [line.strip().split('\t') for line in lines]
     df = pd.DataFrame(data, columns=['Metric', 'Value'])
     df['Value'] = pd.to_numeric(df['Value'], errors='ignore')
@@ -41,10 +43,10 @@ def create_dataframe_from_log_file(file_path):
    
     data = {'At time':[], 'process' : [], 'status' : [], 'arrive' : [], 'total' : [], 'remain' : [], 'wait' : [], 'TA' : [], 'WTA' : []}
     
-    lines = read_text_file(file_path)
+    lines = []
 
-    if not lines:
-        return pd.DataFrame()
+    while not lines:
+        lines = read_text_file(file_path)
     
     for line in lines:
         parts = line.strip().split('\t')
@@ -73,10 +75,10 @@ def create_dataframe_from_memo_df(file_path):
    
     data = {'At time':[], 'process' : [], 'status' : [], 'size' : [], 'from' : [], 'to' : []}
     
-    lines = read_text_file(file_path)
+    lines = []
 
-    if not lines:
-        return pd.DataFrame()
+    while not lines:
+        lines = read_text_file(file_path)
     
     for line in lines:
         parts = line.strip().split('\t')
@@ -146,3 +148,5 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print("Execution interrupted by the user.")
+    except Exception as e:
+        print("Error")
