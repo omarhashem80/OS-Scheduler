@@ -273,11 +273,11 @@ struct PriorityQueue_Ali {
 };
 
 struct PriorityQueue_Ali* createPriorityQueue(int capacity) {
-    struct PriorityQueue_Ali *pq_Ali = (struct PriorityQueue_Ali*)malloc(sizeof(struct PriorityQueue_Ali));
-    pq_Ali->capacity = capacity;
-    pq_Ali->size = 0;
-    pq_Ali->heap = (struct Node**)malloc(capacity * sizeof(struct Node*));
-    return pq_Ali;
+    struct PriorityQueue_Ali *pq = (struct PriorityQueue_Ali*)malloc(sizeof(struct PriorityQueue_Ali));
+    pq->capacity = capacity;
+    pq->size = 0;
+    pq->heap = (struct Node**)malloc(capacity * sizeof(struct Node*));
+    return pq;
 }
 
 void swap(struct Node **a, struct Node **b) {
@@ -286,24 +286,32 @@ void swap(struct Node **a, struct Node **b) {
     *b = temp;
 }
 
-void heapify(struct PriorityQueue_Ali *pq_Ali, int idx) {
+void heapify(struct PriorityQueue_Ali *pq, int idx, bool strn) {
     int smallest = idx;
     int left = 2 * idx + 1;
     int right = 2 * idx + 2;
+    if(strn) {
+        if (left < pq->size && pq->heap[left]->data->remaining_time < pq->heap[smallest]->data->remaining_time)
+            smallest = left;
 
-    if (left < pq_Ali->size && pq_Ali->heap[left]->data->remaining_time < pq_Ali->heap[smallest]->data->remaining_time)
-        smallest = left;
+        if (right < pq->size && pq->heap[right]->data->remaining_time < pq->heap[smallest]->data->remaining_time)
+            smallest = right;
+    }else {
+        if (left < pq->size && pq->heap[left]->data->priority < pq->heap[smallest]->data->priority)
+            smallest = left;
 
-    if (right < pq_Ali->size && pq_Ali->heap[right]->data->remaining_time < pq_Ali->heap[smallest]->data->remaining_time)
-        smallest = right;
+        if (right < pq->size && pq->heap[right]->data->priority < pq->heap[smallest]->data->priority)
+            smallest = right;
+    }
+
 
     if (smallest != idx) {
-        swap(&pq_Ali->heap[idx], &pq_Ali->heap[smallest]);
-        heapify(pq_Ali, smallest);
+        swap(&pq->heap[idx], &pq->heap[smallest]);
+        heapify(pq, smallest, strn);
     }
 }
 
-void insert(struct PriorityQueue_Ali *pq, struct Process* p) {
+void insert(struct PriorityQueue_Ali *pq, struct Process* p, bool strn) {
     if (pq->size == pq->capacity) {
         printf("Priority queue is full.\n");
         return;
@@ -313,43 +321,50 @@ void insert(struct PriorityQueue_Ali *pq, struct Process* p) {
     pq->heap[i] = (struct Node*)malloc(sizeof(struct Node));
     pq->heap[i]->data = p;
 
-    while (i != 0 && pq->heap[(i - 1) / 2]->data->remaining_time > pq->heap[i]->data->remaining_time) {
-        swap(&pq->heap[i], &pq->heap[(i - 1) / 2]);
-        i = (i - 1) / 2;
+    if(strn) {
+        while (i != 0 && pq->heap[(i - 1) / 2]->data->remaining_time > pq->heap[i]->data->remaining_time) {
+            swap(&pq->heap[i], &pq->heap[(i - 1) / 2]);
+            i = (i - 1) / 2;
+        }
+    }else {
+        while (i != 0 && pq->heap[(i - 1) / 2]->data->priority > pq->heap[i]->data->priority) {
+            swap(&pq->heap[i], &pq->heap[(i - 1) / 2]);
+            i = (i - 1) / 2;
+        }
     }
 }
 
-struct Node* extractMin(struct PriorityQueue_Ali *pq_Ali) {
-    if (pq_Ali->size <= 0) {
+struct Node* extractMin(struct PriorityQueue_Ali *pq, bool strn) {
+    if (pq->size <= 0) {
         return NULL;
     }
 
-    if (pq_Ali->size == 1) {
-        pq_Ali->size--;
-        return pq_Ali->heap[0];
+    if (pq->size == 1) {
+        pq->size--;
+        return pq->heap[0];
     }
 
-    struct Node* root = pq_Ali->heap[0];
-    pq_Ali->heap[0] = pq_Ali->heap[pq_Ali->size - 1];
-    pq_Ali->size--;
-    heapify(pq_Ali, 0);
+    struct Node* root = pq->heap[0];
+    pq->heap[0] = pq->heap[pq->size - 1];
+    pq->size--;
+    heapify(pq, 0, strn);
     return root;
 }
 
-int isEmpty_Ali(struct PriorityQueue_Ali *pq_Ali) {
-    return pq_Ali->size == 0;
+int isEmpty_Ali(struct PriorityQueue_Ali *pq) {
+    return pq->size == 0;
 }
 
-void freeMemory_Ali(struct PriorityQueue_Ali *pq_Ali) {
+void freeMemory_Ali(struct PriorityQueue_Ali *pq) {
     // Free memory allocated to the nodes in the priority queue
-    for (int i = 0; i < pq_Ali->size; i++) {
-        free(pq_Ali->heap[i]->data);
-        free(pq_Ali->heap[i]);
+    for (int i = 0; i < pq->size; i++) {
+        free(pq->heap[i]->data);
+        free(pq->heap[i]);
     }
 
     // Free memory allocated to the heap array and the priority queue itself
-    free(pq_Ali->heap);
-    free(pq_Ali);
+    free(pq->heap);
+    free(pq);
 }
 // -----------------------------------------------------------------------------------------
 

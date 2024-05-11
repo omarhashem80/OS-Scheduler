@@ -288,12 +288,12 @@ void write_scheduler_perf(){
     fclose(perfFilePointer);
 
 }
-
 void hpf_start(){
+        pq_Ali = createPriorityQueue(10000);
         terminated_process=NULL;
         int next_time=getClk();
         running_process=NULL;
-        while (running_process!=NULL||!no_more_processes_to_recieve||!IsEmpty(&priorityQueue)||!isEmpty(&waiting_queue))
+        while (running_process!=NULL||!no_more_processes_to_recieve||!isEmpty_Ali(pq_Ali)||!isEmpty(&waiting_queue))
         {
             if((next_time+1)==getClk()){
                 printf("next time:%d clk:%d\n",next_time,getClk());
@@ -302,6 +302,9 @@ void hpf_start(){
                 next_time++;
                 if(running_process!=NULL){
                     running_process->remaining_time--;
+                    if(running_process->remaining_time<0){
+                        running_process->remaining_time = 0; 
+                    }
                     printf("remaing time of process:%d is %d\n",running_process->id,running_process->remaining_time);
                     
                 }else{
@@ -327,12 +330,15 @@ void hpf_start(){
                 if(allocate_memory(p)){
                     printf("success to allocate\n");
                     fork_process(p);
-                    Insert(&priorityQueue, p);
+                    // Insert(&priorityQueue, p);
+                    insert(pq_Ali, p, 0);
                     if(running_process && p->arrival == running_process->arrival && p->priority < running_process->priority) {
-                    Insert(&priorityQueue, running_process);
-                    running_process = Extract_Min(&priorityQueue);
-                    strcpy(running_process->state,"started");
-                    update_PCB(running_process,0);  
+                        // Insert(&priorityQueue, running_process);
+                        insert(pq_Ali, running_process, 0);
+                        // running_process = Extract_Min(&priorityQueue);
+                        running_process = extractMin(pq_Ali, 0)->data;
+                        strcpy(running_process->state,"started");
+                        update_PCB(running_process,0);  
                     }
                     memory_log(p,1);
                 }else{
@@ -379,6 +385,9 @@ void hpf_start(){
                         //Waiting Time = Turnaround Time - running time
                         running_process->WTA=running_process->turnaround_time*1.0/running_process->runtime;
                         running_process->waiting_time=running_process->turnaround_time-running_process->runtime;
+                        printf("######################################################################################################\n");
+                        printf("Process ID %d  -- WT: %d   size:   %d\n", running_process->id, running_process->waiting_time, pq_Ali->size);
+                        printf("######################################################################################################\n");
                         terminated_process=running_process;
                         deallocate_memory(terminated_process->start_address);
                         memory_log(running_process,0);
@@ -393,39 +402,188 @@ void hpf_start(){
                             has_mem=allocate_memory(p);
                             if(has_mem){
                                 fork_process(p);
-                                Insert(&priorityQueue, p);
-                                if(running_process && p->arrival == running_process->arrival && p->priority < running_process->priority) {
-                                    Insert(&priorityQueue, running_process);
-                                    running_process = Extract_Min(&priorityQueue);
-                                    strcpy(running_process->state,"started");
-                                    update_PCB(running_process,0);  
-                                }
+                                // Insert(&priorityQueue, p);
+                                insert(pq_Ali, p, 0);
+                                // if(running_process && p->arrival == running_process->arrival && p->priority < running_process->priority) {
+                                //     // Insert(&priorityQueue, running_process);
+                                //     insert(pq_Ali, running_process, 0);
+                                //     // running_process = Extract_Min(&priorityQueue);
+                                //     running_process = extractMin(pq_Ali, 0)->data;
+                                //     strcpy(running_process->state,"started");
+                                //     update_PCB(running_process,0);  
+                                // }
                                 memory_log(p,1);
-                            }else
+                            }else {
+                                printf("YESYESYES\n");
                                 enqueue(&waiting_queue,p);
+                            }
+                                
                         }                        
                     }
                     update_PCB(running_process,f);                            
                 }
                 running_process=NULL;
+                
             }
-            if(!running_process && !IsEmpty(&priorityQueue)){
+            if(!running_process && !isEmpty_Ali(pq_Ali)){
                 flag=false;
                 printf("**********************************");
-                printf("number of processes in the queue:%d",priorityQueue.heap_size);
+                printf("number of processes in the queue:%d", pq_Ali->size);
                 printf("**********************************\n");
-                running_process= Extract_Min(&priorityQueue);
+                // running_process= Extract_Min(&priorityQueue);
+                
+                running_process = extractMin(pq_Ali, 0)->data;
                 if(running_process->remaining_time==running_process->runtime){
                     strcpy(running_process->state,"started");
                 }
+                printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
+                printf("Process ID: %d Proirty: %d\n", running_process->id, running_process->priority);
+                printf("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
                 update_PCB(running_process,0);
                 kill(running_process->actual_id,SIGCONT);
             }
         }
     total_cpu_time=getClk();
-    DestroyPriorityQueue(&priorityQueue);
+    // DestroyPriorityQueue(&priorityQueue);
     write_scheduler_perf();
 }
+// void hpf_start(){
+//         terminated_process=NULL;
+//         int next_time=getClk();
+//         running_process=NULL;
+//         while (running_process!=NULL||!no_more_processes_to_recieve||!IsEmpty(&priorityQueue)||!isEmpty(&waiting_queue))
+//         {
+//             if((next_time+1)==getClk()){
+//                 printf("next time:%d clk:%d\n",next_time,getClk());
+//                 //new time unit
+//                 //you should update process 
+//                 next_time++;
+//                 if(running_process!=NULL){
+//                     running_process->remaining_time--;
+//                     printf("remaing time of process:%d is %d\n",running_process->id,running_process->remaining_time);
+                    
+//                 }else{
+//                     ideal_time++;
+//                     printf("no_more_processes_to_recieve: %d\n",no_more_processes_to_recieve);
+//                     printf("/////////*************////////////cpu is ideal now \n");
+//                 }
+//             }
+//             int rec_val= msgrcv(q_id, &message, sizeof(message.process),0, IPC_NOWAIT);
+//             //printf("FROM SCHDULER FILE :: HI:%d \n",message.process->id);
+//             //printf("FROM SCHDULER FILE :: shceduler recieved val%d \n",rec_val);
+//             int f=0;
+//             if(rec_val!=-1){//new process arrives
+//                 printf("FROM SCHDULER FILE :: new process arrived at:%d\n",message.process.arrival);                
+//                 // Convert the integer to a string
+//                 struct Process * p=malloc(sizeof(struct Process));
+//                 p->runtime=message.process.runtime;
+//                 p->arrival=message.process.arrival;
+//                 p->id=message.process.id;
+//                 p->remaining_time=message.process.runtime;
+//                 p->priority=message.process.priority;
+//                 p->max_size=message.process.max_size;
+//                 if(allocate_memory(p)){
+//                     printf("success to allocate\n");
+//                     fork_process(p);
+//                     Insert(&priorityQueue, p);
+//                     if(running_process && p->arrival == running_process->arrival && p->priority < running_process->priority) {
+//                     Insert(&priorityQueue, running_process);
+//                     running_process = Extract_Min(&priorityQueue);
+//                     strcpy(running_process->state,"started");
+//                     update_PCB(running_process,0);  
+//                     }
+//                     memory_log(p,1);
+//                 }else{
+//                     printf("Fail to allocate\n");
+//                     enqueue(&waiting_queue,p);
+//                     //pushPQ(&waiting_queue,p,true);
+//                 }
+//                 // char runtime[20]; 
+//                 // sprintf(runtime, "%d", message.process.runtime);
+//                 // char id [20]; 
+//                 // sprintf(id, "%d", message.process.id);
+//                 // int pid=fork();
+//                 // if(pid==0){
+//                 //    // printf("FROM SCHDULER FILE :: process id :%d\n",getpid());
+//                 //    // execl("./process.out",runtime,message.process.id,NULL);
+//                 //     char* processAgruments[]={"process.out", runtime,id, NULL};
+//                 //     execv(realpath("process.out", NULL),processAgruments);
+//                 // }
+                
+//                 // Insert(&priorityQueue, p);
+//                 // if(running_process && p->arrival == running_process->arrival && p->priority < running_process->priority) {
+//                 //     Insert(&priorityQueue, running_process);
+//                 //     running_process = Extract_Min(&priorityQueue);
+//                 //     strcpy(running_process->state,"started");
+//                 //     update_PCB(running_process,0);  
+//                 // }
+//                 // kill(pid,SIGTSTP);
+//             }
+//             if((running_process && running_process->remaining_time==0) || flag){
+//                 if(running_process!=NULL){
+//                     int f=0;
+//                     printf("**********************************");
+//                     printf("signal should be passed to %d",running_process->actual_id);
+//                     printf("**********************************\n");
+//                     printf("remaining time should be zero:%d\n",running_process->remaining_time);
+//                     if(running_process->remaining_time==0){
+//                         //todo: wait the process for exit code
+//                         f=1;
+//                         printf("/////////////////////////////////\n");
+//                         printf("Process should terminates if side\n");
+//                         printf("/////////////////////////////////\n");
+//                         strcpy(running_process->state,"finish");
+//                         running_process->turnaround_time=getClk()-running_process->arrival;
+//                         //Waiting Time = Turnaround Time - running time
+//                         running_process->WTA=running_process->turnaround_time*1.0/running_process->runtime;
+//                         running_process->waiting_time=running_process->turnaround_time-running_process->runtime;
+//                         terminated_process=running_process;
+//                         deallocate_memory(terminated_process->start_address);
+//                         memory_log(running_process,0);
+                        
+//                         //use the freed memory of the terminated process
+//                         int size=waiting_queue.size;
+//                         bool has_mem;
+//                         while (size--)
+//                         {
+//                             struct Process * p=dequeue(&waiting_queue);
+//                             printf("\n\nthe last process space%d its running time:%d\n\n",p->max_size,p->remaining_time);
+//                             has_mem=allocate_memory(p);
+//                             if(has_mem){
+//                                 fork_process(p);
+//                                 Insert(&priorityQueue, p);
+//                                 if(running_process && p->arrival == running_process->arrival && p->priority < running_process->priority) {
+//                                     Insert(&priorityQueue, running_process);
+//                                     running_process = Extract_Min(&priorityQueue);
+//                                     strcpy(running_process->state,"started");
+//                                     update_PCB(running_process,0);  
+//                                 }
+//                                 memory_log(p,1);
+//                             }else
+//                                 enqueue(&waiting_queue,p);
+//                         }                        
+//                     }
+//                     update_PCB(running_process,f);                            
+//                 }
+//                 running_process=NULL;
+//             }
+//             if(!running_process && !IsEmpty(&priorityQueue)){
+//                 flag=false;
+//                 printf("**********************************");
+//                 printf("number of processes in the queue:%d",priorityQueue.heap_size);
+//                 printf("**********************************\n");
+//                 running_process= Extract_Min(&priorityQueue);
+//                 if(running_process->remaining_time==running_process->runtime){
+//                     strcpy(running_process->state,"started");
+//                 }
+//                 update_PCB(running_process,0);
+//                 kill(running_process->actual_id,SIGCONT);
+//             }
+//         }
+//     total_cpu_time=getClk();
+//     DestroyPriorityQueue(&priorityQueue);
+//     write_scheduler_perf();
+// }
 /*
 Phase2 
 */
@@ -593,20 +751,20 @@ void strn_start() {
             p->max_size=message.process.max_size;
             strcpy(p->state, "stopped\0");
             p->priority = message.process.priority;
-            printf("FROM SCHDULER FILE5 :: scheduler id :%d\n", getpid());
-            printf("FROM SCHDULER FILE :: new process arrived at:%d\n", message.process.arrival);
+            // printf("FROM SCHDULER FILE5 :: scheduler id :%d\n", getpid());
+            // printf("FROM SCHDULER FILE :: new process arrived at:%d\n", message.process.arrival);
 
             if(allocate_memory(p)){
                 printf("success to allocate\n");
                 fork_process(p);
-                insert(pq_Ali, p);
+                insert(pq_Ali, p, 1);
                 if (running_process != NULL && p->remaining_time < running_process->remaining_time) {
                 // Preempt the running process
                 strcpy(running_process->state, "preempted");
                 update_PCB(running_process, 0);////////////ask
                 kill(running_process->actual_id, SIGSTOP);
                 // Enqueue the preempted process back into the queue
-                insert(pq_Ali, running_process);
+                insert(pq_Ali, running_process, 1);
                 // Set the arriving process as the new running process
                 running_process = p;
                 }
@@ -677,14 +835,14 @@ void strn_start() {
                         has_mem=allocate_memory(p);
                         if(has_mem){
                             fork_process(p);
-                            insert(pq_Ali, p);
+                            insert(pq_Ali, p, 1);
                             if (running_process != NULL && p->remaining_time < running_process->remaining_time) {
                                 // Preempt the running process
                                 strcpy(running_process->state, "preempted");
                                 update_PCB(running_process, 0);////////////ask
                                 kill(running_process->actual_id, SIGSTOP);
                                 // Enqueue the preempted process back into the queue
-                                insert(pq_Ali, running_process);
+                                insert(pq_Ali, running_process, 1);
                                 // Set the arriving process as the new running process
                                 running_process = p;
                             }
@@ -698,12 +856,12 @@ void strn_start() {
             running_process = NULL;
 
             //pick new process
-            if (!isEmpty_Ali(pq_Ali)) {
+            if (!running_process && !isEmpty_Ali(pq_Ali)) {
                 flag = false;
                 printf("**********************************");
                 printf("number of processes in the queue:%d", pq_Ali->size);
                 printf("**********************************\n");
-                running_process = extractMin(pq_Ali)->data;
+                running_process = extractMin(pq_Ali, 1)->data;
                 strcpy(running_process->state, "resumed");
                 if (running_process->remaining_time == running_process->runtime) {
                     strcpy(running_process->state, "started");
@@ -711,6 +869,19 @@ void strn_start() {
                 update_PCB(running_process, 0);
                 kill(running_process->actual_id, SIGCONT);
             }
+        }
+        if (!isEmpty_Ali(pq_Ali)) {
+            flag = false;
+            printf("**********************************");
+            printf("number of processes in the queue:%d", pq_Ali->size);
+            printf("**********************************\n");
+            running_process = extractMin(pq_Ali, 1)->data;
+            strcpy(running_process->state, "resumed");
+            if (running_process->remaining_time == running_process->runtime) {
+                strcpy(running_process->state, "started");
+            }
+            update_PCB(running_process, 0);
+            kill(running_process->actual_id, SIGCONT);
         }
     }
     total_cpu_time = getClk();
