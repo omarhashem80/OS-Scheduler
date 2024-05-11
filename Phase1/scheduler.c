@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     fclose(outputFilePointer);
     printf("After the file\n");
     images();
-    sleep(5);
+    sleep(10);
     printf("\n-------------------------------------------------------\n");
     printf("\n-------------------------------------------------------\n");
     printf("\n\t\t\tscheduer finished\n");
@@ -431,29 +431,24 @@ Phase2
 */
 void deallocate_memory(int i){
     starter_locations[i]=-starter_locations[i];
-    //call allocate new process after that 
+    //call allocate new process after that
+    int n = 2;
     printf("Memory at location:%d is deallocated\n", i);
     while (true)
     {
         printf("IN WHile\n");
-       //with next equall place 
-        if((i-starter_locations[i])<1024&&(starter_locations[i-starter_locations[i]]==starter_locations[i]||starter_locations[i-starter_locations[i]]==0)){
-            //
-        //if two equall sizes (negatives) 
         int s=-2* starter_locations[i];
+        // with next equall place 
+        if((i-starter_locations[i])<1024&&i%s==0&&(starter_locations[i-starter_locations[i]]==starter_locations[i]||starter_locations[i-starter_locations[i]]==0)){
+        //if two equall sizes (negatives) 
         //  get the summation==s
-        if(i%s==0){
-            //if the start location of both of them %s ==0 then concat them 
+        //if the start location of both of them %s ==0 then concat them 
             starter_locations[i]=-s;
-            }
         //with previous 
         }
-        else if((i+starter_locations[i])>=0&&starter_locations[i+starter_locations[i]]==starter_locations[i]){
-            int s=-2* starter_locations[i];
-            if((i+starter_locations[i])%s==0){
+        else if((i+starter_locations[i])>=0&&((i+starter_locations[i])%s==0)&&starter_locations[i+starter_locations[i]]==starter_locations[i]){
             //if the start location of both of them %s ==0 then concat them 
-                starter_locations[(i+starter_locations[i])]=-s;
-            }
+            starter_locations[(i+starter_locations[i])]=-s;
             i=i+starter_locations[i];
         }else{ 
             printf("Out OF While.\n");
