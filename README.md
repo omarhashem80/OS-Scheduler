@@ -106,7 +106,7 @@ Example:
 
 ## 👥 **Contributors**  
 
-We appreciate the dedication and hard work of our team:  
+Our team:  
 
 - **[Omar Hashem](https://github.com/omarhashem80)** – member 💻
 - **[Abdelrahman Mohamed Abdelaty](https://github.com/Abdelrahman-Mohamed-Abdelaty)** – member 💻
